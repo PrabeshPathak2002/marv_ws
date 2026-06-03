@@ -25,7 +25,8 @@ marv_ws/
 ├── src/
 │   ├── marv_vision/     # Front & down cameras, YOLO inference, VSLAM helpers
 │   ├── marv_control/    # Master control & mission behaviors
-│   └── marv_ardusub/    # Depth hold, ESC PWM, position estimation
+│   ├── marv_ardusub/    # Depth hold, ESC PWM, position estimation
+│   └── marv_bringup/    # Launch files
 ├── build/
 ├── install/
 ├── log/
@@ -40,7 +41,8 @@ A previous workspace may live at `~/ros2_ws_archive` if you migrated from an old
 |---------|--------|------|
 | **marv_vision** | `f_cam_node`, `d_cam_node` | Camera processing, object detection, detection strings |
 | **marv_control** | `master_control_node` | Mission logic: path, gates, gripper, torpedo, return home |
-| **marv_ardusub** | `ardusub_node` | Vehicle I/O: depth, thruster PWM, position estimate |
+| **marv_ardusub** | `ardusub_node` | Vehicle I/O: thruster PWM, depth hold; **`pos_est` for where-the-sub-is** |
+| **marv_bringup** | — | Launch files to start the full stack |
 
 ### marv_vision
 
@@ -56,7 +58,12 @@ A previous workspace may live at `~/ros2_ws_archive` if you migrated from an old
 ### marv_ardusub
 
 - **Node:** `ardusub_node`
-- **Library:** `marv_ardusub/lib/` — `maintain_depth`, `calculate_esc_pwm`, `estimate_position`
+- **Library:** `marv_ardusub/lib/`
+  - **`pos_est`** — critical path: fuse inputs → publish `/sensors/pose` and `/sensors/velocity` only
+  - **`sensor_io`** — read raw hardware / MAVLink inputs; optional raw-topic publishing later
+  - `maintain_depth`, `calculate_esc_pwm` — actuation helpers
+
+Keep `pos_est` focused on **where the sub is and how it moves**. Do not add battery, camera, or raw IMU publishing there — use separate nodes or `sensor_io` when needed.
 
 ## Build
 
@@ -79,18 +86,35 @@ colcon build --packages-select marv_vision
 
 ## Run
 
-After sourcing `install/setup.bash`, start nodes in separate terminals (or combine with a launch file later):
+After sourcing `install/setup.bash`, start the full stack with one command:
 
 ```bash
-# Vision
+ros2 launch marv_bringup marv_bringup.launch.py
+```
+
+### Launch options
+
+```bash
+# Full stack (default)
+ros2 launch marv_bringup marv_bringup.launch.py
+
+# Subsystems only
+ros2 launch marv_bringup ardusub.launch.py
+ros2 launch marv_bringup control.launch.py
+ros2 launch marv_bringup vision.launch.py
+
+# Partial stack
+ros2 launch marv_bringup marv_bringup.launch.py use_vision:=false
+ros2 launch marv_bringup marv_bringup.launch.py use_front_cam:=true use_down_cam:=false
+```
+
+### Individual nodes (manual)
+
+```bash
+ros2 run marv_ardusub ardusub_node
+ros2 run marv_control master_control_node
 ros2 run marv_vision f_cam_node
 ros2 run marv_vision d_cam_node
-
-# Control
-ros2 run marv_control master_control_node
-
-# Hardware interface
-ros2 run marv_ardusub ardusub_node
 ```
 
 ## Topics (initial wiring)
@@ -100,7 +124,10 @@ ros2 run marv_ardusub ardusub_node
 | `f_cam/detections` | `std_msgs/String` | `f_cam_node` | `master_control_node` |
 | `d_cam/detections` | `std_msgs/String` | `d_cam_node` | — |
 | `cmd_vel` | `geometry_msgs/Twist` | `master_control_node` | `ardusub_node` |
-| `depth` | `std_msgs/Float32` | `ardusub_node` | — |
+| `/sensors/pose` | `geometry_msgs/PoseWithCovarianceStamped` | **`pos_est`** | — |
+| `/sensors/velocity` | `geometry_msgs/TwistWithCovarianceStamped` | **`pos_est`** | — |
+
+Raw sensors (IMU, pressure, cameras, battery) are **not** in `pos_est`. Add them via `sensor_io` or dedicated driver nodes when needed.
 
 Behavior modules and vision pipelines are **stubs** until you add real sensor drivers, models, and ArduSub MAVLink/MAVROS integration.
 
@@ -119,4 +146,4 @@ colcon test-result --verbose
 
 ## License
 
-Package licenses are not finalized (`TODO` in `package.xml`). Set a license identifier and add a `LICENSE` file before distribution.
+This project is licensed under the [MIT License](LICENSE).

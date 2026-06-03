@@ -17,7 +17,7 @@ setup(
     maintainer='eagleauv',
     maintainer_email='dragontomb35782@gmail.com',
     description='Marv AUV vision processing (front and down cameras)',
-    license='TODO: License declaration',
+    license='MIT',
     extras_require={
         'test': [
             'pytest',

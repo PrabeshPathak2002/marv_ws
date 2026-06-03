@@ -4,20 +4,27 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Float32
 
-from marv_ardusub.lib import calculate_esc_pwm, estimate_position, maintain_depth
+from marv_ardusub.lib import (
+    calculate_esc_pwm,
+    estimate_position,
+    maintain_depth,
+    publish_position_estimate,
+    read_sensor_inputs,
+    setup_position_publishers,
+)
 
 
 class ArdusubNode(Node):
-  """Interfaces with ArduSub: depth hold, ESC PWM, position estimate."""
+  """Interfaces with ArduSub: depth hold, ESC PWM, position estimate via pos_est."""
 
   def __init__(self):
     super().__init__('ardusub_node')
-    self.depth_pub = self.create_publisher(Float32, 'depth', 10)
+    setup_position_publishers(self)
     self.create_subscription(Twist, 'cmd_vel', self.cmd_vel_callback, 10)
     self.timer = self.create_timer(0.1, self.timer_callback)
     self.target_depth = 1.0
+    self._last_depth_m = self.target_depth
     self.get_logger().info('ArduSub node started')
 
   def cmd_vel_callback(self, msg: Twist):
@@ -25,12 +32,10 @@ class ArdusubNode(Node):
     calculate_esc_pwm(msg.linear.y, channel=1)
 
   def timer_callback(self):
-    maintain_depth(self, self.target_depth)
-    pose = estimate_position(self)
-    if pose is not None and 'depth' in pose:
-      depth_msg = Float32()
-      depth_msg.data = float(pose['depth'])
-      self.depth_pub.publish(depth_msg)
+    maintain_depth(self, self.target_depth, current_depth_m=self._last_depth_m)
+    inputs = read_sensor_inputs(self)
+    estimate = estimate_position(self, inputs)
+    publish_position_estimate(self, estimate)
 
 
 def main(args=None):
