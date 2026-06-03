@@ -6,21 +6,24 @@ from rclpy.node import Node
 from geometry_msgs.msg import Twist
 
 from marv_ardusub.lib import (
-    calculate_esc_pwm,
     estimate_position,
     maintain_depth,
     publish_position_estimate,
     read_sensor_inputs,
+    setup_mavros_subscriptions,
     setup_position_publishers,
 )
+from marv_ardusub.lib.mavros_actuation import forward_cmd_vel, setup_mavros_actuation
 
 
 class ArdusubNode(Node):
-  """Interfaces with ArduSub: depth hold, ESC PWM, position estimate via pos_est."""
+  """Interfaces with ArduSub: MAVROS actuation, depth hold, pos_est."""
 
   def __init__(self):
     super().__init__('ardusub_node')
     setup_position_publishers(self)
+    setup_mavros_subscriptions(self)
+    setup_mavros_actuation(self)
     self.create_subscription(Twist, 'cmd_vel', self.cmd_vel_callback, 10)
     self.timer = self.create_timer(0.1, self.timer_callback)
     self.target_depth = 1.0
@@ -28,11 +31,10 @@ class ArdusubNode(Node):
     self.get_logger().info('ArduSub node started')
 
   def cmd_vel_callback(self, msg: Twist):
-    calculate_esc_pwm(msg.linear.x, channel=0)
-    calculate_esc_pwm(msg.linear.y, channel=1)
+    maintain_depth(self, self.target_depth, current_depth_m=self._last_depth_m)
+    forward_cmd_vel(self, msg)
 
   def timer_callback(self):
-    maintain_depth(self, self.target_depth, current_depth_m=self._last_depth_m)
     inputs = read_sensor_inputs(self)
     estimate = estimate_position(self, inputs)
     publish_position_estimate(self, estimate)

@@ -2,6 +2,8 @@
 
 Modular [ROS 2 Humble](https://docs.ros.org/en/humble/) workspace for the **Marv** autonomous underwater vehicle (AUV). The stack is split into vision, high-level control, and ArduSub hardware interface packages so each subsystem can be developed and tested independently.
 
+**Operating guide:** [INSTRUCTIONS.md](INSTRUCTIONS.md) — ARK FPV USB setup, MAVROS checks, control loop procedures (bench and in-water).
+
 ## Prerequisites
 
 - Ubuntu 22.04 (or compatible) with **ROS 2 Humble** installed
@@ -30,7 +32,8 @@ marv_ws/
 ├── build/
 ├── install/
 ├── log/
-└── README.md
+├── README.md
+└── INSTRUCTIONS.md
 ```
 
 A previous workspace may live at `~/ros2_ws_archive` if you migrated from an older `ros2_ws`.
@@ -64,6 +67,52 @@ A previous workspace may live at `~/ros2_ws_archive` if you migrated from an old
   - `maintain_depth`, `calculate_esc_pwm` — actuation helpers
 
 Keep `pos_est` focused on **where the sub is and how it moves**. Do not add battery, camera, or raw IMU publishing there — use separate nodes or `sensor_io` when needed.
+
+## Hardware (ARK FPV + Jetson)
+
+The **ARK FPV** flight controller connects to the Jetson over **USB** (shows up as a serial device, typically `/dev/ttyACM0`). Your user must be in the `dialout` group to access it.
+
+```
+Jetson (marv_ws)  --USB-->  ARK FPV (ArduSub)  --PWM-->  thrusters / servos
+                MAVROS (MAVLink serial)
+                sensor_io  -->  pos_est  -->  /sensors/pose
+```
+
+**Check the link:**
+
+```bash
+lsusb | grep -i ark          # expect: Generic ARK_FPV
+ls -l /dev/ttyACM*           # often ttyACM0 (+ sometimes ttyACM1)
+```
+
+**Typical MAVROS serial URL** (confirm baud in QGroundControl / ArduSub params):
+
+```bash
+ros2 run mavros mavros_node --ros-args -p fcu_url:=serial:///dev/ttyACM0:115200
+```
+
+`ardusub_node` → `sensor_io` subscribes to `/mavros/imu/data` and `/mavros/local_position/odom`, then `pos_est` publishes `/sensors/pose`.
+
+**Healthy MAVROS (what you should see):**
+
+- `/mavros/state`: `connected: true`, mode e.g. `MANUAL`
+- `/mavros/imu/data`: non-zero orientation and linear_acceleration (~9.8 m/s² on one axis)
+
+```bash
+# Terminal 1 — MAVROS + Marv stack (or run mavros separately)
+ros2 launch marv_bringup marv_bringup.launch.py
+
+# Terminal 2 — verify pos_est output
+ros2 topic echo /sensors/pose --once
+```
+
+## Control loop (pose → cmd_vel → MAVROS)
+
+```
+/sensors/pose  →  master_control_node  →  /cmd_vel  →  ardusub_node  →  MAVROS
+```
+
+Defaults are bench-safe (`enable_control:=false`, `command_backend:=log_only`). Full step-by-step procedures (MAVROS check, bench test, in-water actuation) are in **[INSTRUCTIONS.md](INSTRUCTIONS.md)**.
 
 ## Build
 
@@ -123,8 +172,8 @@ ros2 run marv_vision d_cam_node
 |-------|------|-----------|------------|
 | `f_cam/detections` | `std_msgs/String` | `f_cam_node` | `master_control_node` |
 | `d_cam/detections` | `std_msgs/String` | `d_cam_node` | — |
-| `cmd_vel` | `geometry_msgs/Twist` | `master_control_node` | `ardusub_node` |
-| `/sensors/pose` | `geometry_msgs/PoseWithCovarianceStamped` | **`pos_est`** | — |
+| `cmd_vel` | `geometry_msgs/Twist` | `master_control_node` | `ardusub_node` → MAVROS |
+| `/sensors/pose` | `geometry_msgs/PoseWithCovarianceStamped` | **`pos_est`** | `master_control_node` |
 | `/sensors/velocity` | `geometry_msgs/TwistWithCovarianceStamped` | **`pos_est`** | — |
 
 Raw sensors (IMU, pressure, cameras, battery) are **not** in `pos_est`. Add them via `sensor_io` or dedicated driver nodes when needed.
