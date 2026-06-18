@@ -24,6 +24,8 @@ def generate_launch_description():
     enable_control = LaunchConfiguration('enable_control')
     command_backend = LaunchConfiguration('command_backend')
     target_depth_m = LaunchConfiguration('target_depth_m')
+    use_sim = LaunchConfiguration('use_sim')
+    use_unity_hil_bridge = LaunchConfiguration('use_unity_hil_bridge')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -76,12 +78,27 @@ def generate_launch_description():
             default_value='1.0',
             description='Depth hold target (meters).',
         ),
+        DeclareLaunchArgument(
+            'use_sim',
+            default_value='false',
+            description='Unity HITL: vision nodes use /unity/*/image_raw topics.',
+        ),
+        DeclareLaunchArgument(
+            'use_unity_hil_bridge',
+            default_value='false',
+            description='Start unity_hil_bridge (Unity IMU/pose -> MAVROS HIL).',
+        ),
         LogInfo(msg='Starting Marv AUV stack...'),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(launch_dir, 'mavros.launch.py')),
             launch_arguments={'fcu_url': fcu_url}.items(),
             condition=IfCondition(use_mavros),
+        ),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(launch_dir, 'unity_hil_bridge.launch.py')),
+            condition=IfCondition(use_unity_hil_bridge),
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
@@ -106,6 +123,7 @@ def generate_launch_description():
             launch_arguments={
                 'use_front_cam': use_front_cam,
                 'use_down_cam': use_down_cam,
+                'use_sim': use_sim,
             }.items(),
             condition=IfCondition(use_vision),
         ),

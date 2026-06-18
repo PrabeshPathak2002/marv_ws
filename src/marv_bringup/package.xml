@@ -10,6 +10,7 @@
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
   <exec_depend>mavros</exec_depend>
+  <exec_depend>ros_tcp_endpoint</exec_depend>
   <depend>marv_ardusub</depend>
   <depend>marv_control</depend>
   <depend>marv_vision</depend>

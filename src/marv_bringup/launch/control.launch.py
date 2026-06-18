@@ -9,6 +9,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     enable_control = LaunchConfiguration('enable_control')
     target_depth_m = LaunchConfiguration('target_depth_m')
+    active_behavior = LaunchConfiguration('active_behavior')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -21,6 +22,11 @@ def generate_launch_description():
             default_value='1.0',
             description='Target depth for depth hold (meters, NED z down).',
         ),
+        DeclareLaunchArgument(
+            'active_behavior',
+            default_value='depth_hold',
+            description='depth_hold | traverse_gate | detect_path | return_home | hold',
+        ),
         Node(
             package='marv_control',
             executable='master_control_node',
@@ -29,6 +35,7 @@ def generate_launch_description():
             parameters=[{
                 'enable_control': enable_control,
                 'target_depth_m': target_depth_m,
+                'active_behavior': active_behavior,
             }],
         ),
     ])

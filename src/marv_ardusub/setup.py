@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'ardusub_node = marv_ardusub.ardusub_node:main',
+            'unity_hil_bridge = marv_ardusub.unity_hil_bridge:main',
         ],
     },
 )

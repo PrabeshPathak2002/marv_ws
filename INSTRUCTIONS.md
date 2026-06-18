@@ -288,7 +288,88 @@ pkill -f "ros2 launch marv_bringup"
 
 ---
 
-## 11. Related files
+## 11. Front camera vision model
+
+Runtime files (in repo, installed with `marv_vision`):
+
+| File | Purpose |
+|------|---------|
+| `src/marv_vision/marv_vision/weights/front_model.pt` | YOLO weights |
+| `src/marv_vision/marv_vision/weights/front_model_data.yaml` | Class names (`nc: 14`) |
+
+Training image folders referenced in the yaml (`../train/images`, etc.) stay **outside** the repo.
+
+**Requires:** `pip install 'numpy<2' ultralytics` (NumPy 2.x breaks ROS `cv_bridge` on Humble).
+
+### Unity simulation (HITL)
+
+Vision nodes support hardware vs Unity sim via `use_sim`:
+
+| Mode | `use_sim` | Input |
+|------|-----------|--------|
+| Hardware (default) | `false` | OpenCV `VideoCapture` (`camera_index` 0 / 1) |
+| Unity HITL | `true` | `/unity/f_cam/image_raw`, `/unity/d_cam/image_raw` |
+
+```bash
+ros2 launch marv_bringup marv_bringup.launch.py use_sim:=true
+# Or per-node:
+ros2 run marv_vision f_cam_node --ros-args -p use_sim:=true
+```
+
+Detection output on `f_cam/detections` / `d_cam/detections` is unchanged.
+
+### Unity HITL bridge (`unity_hil_bridge`)
+
+Middleware between Unity (ROS-TCP-Endpoint) and ArduSub (MAVROS):
+
+| Direction | Topics |
+|-----------|--------|
+| Unity → ArduSub | `/unity/imu` + `/unity/pose` → `/mavros/hil/sensor` |
+| ArduSub → Unity | `/mavros/rc/out` → `/unity/thruster_forces` |
+
+```bash
+# With MAVROS + bridge (typical Unity HITL session)
+ros2 launch marv_bringup marv_bringup.launch.py \
+  use_sim:=true use_unity_hil_bridge:=true use_mavros:=true
+
+# Bridge only
+ros2 launch marv_bringup unity_hil_bridge.launch.py
+
+### Full Unity simulation (`sim_bringup.launch.py`)
+
+One launch file for the entire Unity HITL stack (isolated from bench defaults):
+
+```bash
+ros2 launch marv_bringup sim_bringup.launch.py
+```
+
+Starts: ROS-TCP-Endpoint (port 10000) → MAVROS → `unity_hil_bridge` →
+`f_cam_node` / `d_cam_node` (`use_sim:=true`) → `master_control_node`.
+
+`ardusub_node` is included by default (`use_pos_est_stack:=true`) for
+`/sensors/pose` and `cmd_vel` → MAVROS. It does **not** publish HIL data.
+
+```bash
+# Enable control once sim is verified
+ros2 launch marv_bringup sim_bringup.launch.py enable_control:=true
+
+# Without ardusub (vision + HIL only)
+ros2 launch marv_bringup sim_bringup.launch.py use_pos_est_stack:=false
+```
+
+`ros_tcp_endpoint` is installed at `~/marv_ws/src/ros_tcp_endpoint` (branch `main-ros2`).
+```
+
+Thruster PWM channels default to indices `[2, 3, 4, 5]` (ArduSub thr/yaw/fwd/lat), published as normalized `[-1, 1]` forces.
+
+```bash
+source ~/marv_ws/install/setup.bash
+python3 -c "from marv_vision.lib.model_config import load_front_model_config; print(load_front_model_config())"
+```
+
+---
+
+## 12. Related files
 
 | File | Purpose |
 |------|---------|

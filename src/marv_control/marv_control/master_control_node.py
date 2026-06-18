@@ -15,6 +15,7 @@ from marv_control.lib import (
     return_home,
     traverse_gate,
 )
+from marv_control.lib.cmd_merge import behavior_to_twist, merge_twists
 from marv_control.lib.motion_control import compute_depth_hold_cmd
 
 TOPIC_POSE = '/sensors/pose'
@@ -30,6 +31,7 @@ class MasterControlNode(Node):
     self.declare_parameter('depth_hold_enabled', True)
     self.declare_parameter('target_depth_m', 1.0)
     self.declare_parameter('depth_kp', 0.25)
+    self.declare_parameter('active_behavior', 'depth_hold')
 
     self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
     self.create_subscription(String, 'f_cam/detections', self.vision_callback, 10)
@@ -43,8 +45,7 @@ class MasterControlNode(Node):
     self._log_counter = 0
 
     self.get_logger().info(
-        'Master control started. enable_control=false by default (bench safe). '
-        'Set enable_control:=true to publish depth-hold cmd_vel.')
+        'Master control started. enable_control=false by default (bench safe).')
 
   def vision_callback(self, msg: String):
     self.vision_data = msg.data
@@ -54,43 +55,50 @@ class MasterControlNode(Node):
     self._pose_rx = True
 
   def control_loop(self):
-    avoid_obstacles(self, self.vision_data)
-    detect_path(self, self.vision_data)
-    return_home(self, self.latest_pose)
-    traverse_gate(self, self.vision_data)
+    behavior = self.get_parameter('active_behavior').value
+
+    behavior_cmd = None
+    if behavior == 'traverse_gate':
+      behavior_cmd = traverse_gate(self, self.vision_data)
+    elif behavior == 'detect_path':
+      behavior_cmd = detect_path(self, self.vision_data)
+    elif behavior == 'return_home':
+      behavior_cmd = return_home(self, self.latest_pose)
+    elif behavior == 'hold':
+      behavior_cmd = None
+
     open_grip(self)
     close_grip(self)
     deploy_torpedo(self)
 
-    cmd = self._compute_cmd_vel()
+    cmd = self._compute_cmd_vel(behavior_cmd)
+
+    if behavior in ('depth_hold', 'traverse_gate', 'detect_path'):
+      obstacle_cmd = avoid_obstacles(self, self.vision_data)
+      if obstacle_cmd is not None:
+        cmd = merge_twists(behavior_to_twist(obstacle_cmd), cmd)
+
     self.cmd_vel_pub.publish(cmd)
 
     self._log_counter += 1
     if self._log_counter % 50 == 0 and self.get_parameter('enable_control').value:
       self.get_logger().info(
-          f'cmd_vel heave={cmd.linear.z:.2f} '
-          f'(pose_rx={self._pose_rx})')
+          f'behavior={behavior} cmd surge={cmd.linear.x:.2f} '
+          f'sway={cmd.linear.y:.2f} heave={cmd.linear.z:.2f}')
 
-  def _compute_cmd_vel(self) -> Twist:
+  def _compute_cmd_vel(self, behavior_cmd=None) -> Twist:
     if not self.get_parameter('enable_control').value:
       return Twist()
 
-    if not self.get_parameter('depth_hold_enabled').value:
-      return Twist()
+    depth_cmd = Twist()
+    if self.get_parameter('depth_hold_enabled').value and self.latest_pose is not None:
+      target = self.get_parameter('target_depth_m').value
+      kp = self.get_parameter('depth_kp').value
+      depth_cmd, _, _ = compute_depth_hold_cmd(
+          self.latest_pose, target, kp=kp)
 
-    if self.latest_pose is None:
-      return Twist()
-
-    target = self.get_parameter('target_depth_m').value
-    kp = self.get_parameter('depth_kp').value
-    cmd, current_z, error = compute_depth_hold_cmd(
-        self.latest_pose, target, kp=kp)
-
-    if self._log_counter % 50 == 0:
-      self.get_logger().debug(
-          f'depth hold: z={current_z:.2f} target={target:.2f} err={error:.2f}')
-
-    return cmd
+    behavior_twist = behavior_to_twist(behavior_cmd)
+    return merge_twists(behavior_twist, depth_cmd)
 
 
 def main(args=None):

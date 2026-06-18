@@ -12,6 +12,7 @@ Modular [ROS 2 Humble](https://docs.ros.org/en/humble/) workspace for the **Marv
 ```bash
 sudo apt update
 sudo apt install ros-humble-desktop python3-colcon-common-extensions
+pip3 install 'numpy<2'   # cv_bridge on Humble is built against NumPy 1.x
 ```
 
 Source ROS before building or running:
@@ -51,7 +52,8 @@ A previous workspace may live at `~/ros2_ws_archive` if you migrated from an old
 
 - **Nodes:** `f_cam_node`, `d_cam_node`
 - **Library:** `marv_vision/lib/` — camera pipelines, coordinates, VSLAM, string formatting, YOLO inference
-- **Weights:** `marv_vision/weights/front_model.pt`, `down_model.pt` (placeholders; replace with trained models)
+- **Weights:** `marv_vision/weights/front_model.pt` + `front_model_data.yaml` (14-class RoboSub model)
+- **Down camera:** `down_model.pt` still a placeholder until trained
 
 ### marv_control
 
@@ -155,6 +157,9 @@ ros2 launch marv_bringup vision.launch.py
 # Partial stack
 ros2 launch marv_bringup marv_bringup.launch.py use_vision:=false
 ros2 launch marv_bringup marv_bringup.launch.py use_front_cam:=true use_down_cam:=false
+
+# Unity simulation (HITL — isolated from bench defaults)
+ros2 launch marv_bringup sim_bringup.launch.py
 ```
 
 ### Individual nodes (manual)

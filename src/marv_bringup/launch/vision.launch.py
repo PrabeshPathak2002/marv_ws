@@ -10,6 +10,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     use_front_cam = LaunchConfiguration('use_front_cam')
     use_down_cam = LaunchConfiguration('use_down_cam')
+    use_sim = LaunchConfiguration('use_sim')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -22,11 +23,17 @@ def generate_launch_description():
             default_value='true',
             description='Start down camera node (d_cam_node).',
         ),
+        DeclareLaunchArgument(
+            'use_sim',
+            default_value='false',
+            description='Unity HITL mode: subscribe to /unity/*/image_raw instead of USB cameras.',
+        ),
         Node(
             package='marv_vision',
             executable='f_cam_node',
             name='f_cam_node',
             output='screen',
+            parameters=[{'use_sim': use_sim}],
             condition=IfCondition(use_front_cam),
         ),
         Node(
@@ -34,6 +41,7 @@ def generate_launch_description():
             executable='d_cam_node',
             name='d_cam_node',
             output='screen',
+            parameters=[{'use_sim': use_sim}],
             condition=IfCondition(use_down_cam),
         ),
     ])

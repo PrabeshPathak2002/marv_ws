@@ -1,0 +1,196 @@
+<?xml version="1.0" ?>
+<robot name="robosub_urdf" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<xacro:include filename="$(find robosub_urdf_description)/urdf/materials.xacro" />
+<xacro:include filename="$(find robosub_urdf_description)/urdf/robosub_urdf.trans" />
+<xacro:include filename="$(find robosub_urdf_description)/urdf/robosub_urdf.gazebo" />
+<link name="base_link">
+  <inertial>
+    <origin xyz="-0.008689334772284675 0.10096966157973847 -0.035304194512593035" rpy="0 0 0"/>
+    <mass value="21.348464861997673"/>
+    <inertia ixx="0.894725" iyy="0.565941" izz="1.254673" ixy="-0.002706" iyz="0.010746" ixz="-0.004193"/>
+  </inertial>
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://robosub_urdf_description/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://robosub_urdf_description/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="Component12_1">
+  <inertial>
+    <origin xyz="0.01915562800370689 -0.019155809586669126 3.388588197747455e-07" rpy="0 0 0"/>
+    <mass value="0.2327632788225813"/>
+    <inertia ixx="5.7e-05" iyy="5.7e-05" izz="9.3e-05" ixy="3.6e-05" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.123171 0.153303 0.062329" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://robosub_urdf_description/meshes/Component12_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.123171 0.153303 0.062329" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://robosub_urdf_description/meshes/Component12_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="Component12_2">
+  <inertial>
+    <origin xyz="-0.019155779926447528 -0.019155490596883123 3.388588195873954e-07" rpy="0 0 0"/>
+    <mass value="0.2327632788225813"/>
+    <inertia ixx="5.7e-05" iyy="5.7e-05" izz="9.3e-05" ixy="-3.6e-05" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.120971 0.152654 0.062329" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://robosub_urdf_description/meshes/Component12_2.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.120971 0.152654 0.062329" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://robosub_urdf_description/meshes/Component12_2.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="Component12_3">
+  <inertial>
+    <origin xyz="0.019155623725996884 0.01915562981204222 3.358321902097172e-07" rpy="0 0 0"/>
+    <mass value="0.2327632788225813"/>
+    <inertia ixx="5.7e-05" iyy="5.7e-05" izz="9.3e-05" ixy="-3.6e-05" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.123394 -0.324791 0.062329" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://robosub_urdf_description/meshes/Component12_3.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.123394 -0.324791 0.062329" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://robosub_urdf_description/meshes/Component12_3.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="Component12_4">
+  <inertial>
+    <origin xyz="-0.019155775648737425 0.019155948955767443 3.3583219003624487e-07" rpy="0 0 0"/>
+    <mass value="0.2327632788225813"/>
+    <inertia ixx="5.7e-05" iyy="5.7e-05" izz="9.3e-05" ixy="3.6e-05" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.121194 -0.32544 0.062329" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://robosub_urdf_description/meshes/Component12_4.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.121194 -0.32544 0.062329" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://robosub_urdf_description/meshes/Component12_4.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="Component12_5">
+  <inertial>
+    <origin xyz="-6.05982949930528e-09 -1.6569399360899517e-07 0.02709035098837861" rpy="0 0 0"/>
+    <mass value="0.2327632788225813"/>
+    <inertia ixx="9.3e-05" iyy="9.3e-05" izz="2.1e-05" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.128755 -0.078854 0.05765" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://robosub_urdf_description/meshes/Component12_5.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.128755 -0.078854 0.05765" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://robosub_urdf_description/meshes/Component12_5.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="Component12_6">
+  <inertial>
+    <origin xyz="-4.639358066049759e-07 3.793603027685277e-07 0.027089899844563767" rpy="0 0 0"/>
+    <mass value="0.2327632788225813"/>
+    <inertia ixx="9.3e-05" iyy="9.3e-05" izz="2.1e-05" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.132096 -0.079757 0.060705" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://robosub_urdf_description/meshes/Component12_6.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.132096 -0.079757 0.060705" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://robosub_urdf_description/meshes/Component12_6.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<joint name="Revolute 4" type="continuous">
+  <origin xyz="-0.123171 -0.153303 -0.062329" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="Component12_1"/>
+  <axis xyz="0.707107 -0.707107 -0.0"/>
+</joint>
+
+<joint name="Revolute 5" type="continuous">
+  <origin xyz="0.120971 -0.152654 -0.062329" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="Component12_2"/>
+  <axis xyz="-0.707107 -0.707107 -0.0"/>
+</joint>
+
+<joint name="Revolute 6" type="continuous">
+  <origin xyz="-0.123394 0.324791 -0.062329" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="Component12_3"/>
+  <axis xyz="0.707107 0.707107 0.0"/>
+</joint>
+
+<joint name="Revolute 7" type="continuous">
+  <origin xyz="0.121194 0.32544 -0.062329" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="Component12_4"/>
+  <axis xyz="-0.707107 0.707107 0.0"/>
+</joint>
+
+<joint name="Revolute 8" type="continuous">
+  <origin xyz="0.128755 0.078854 -0.05765" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="Component12_5"/>
+  <axis xyz="-0.0 -0.0 1.0"/>
+</joint>
+
+<joint name="Revolute 9" type="continuous">
+  <origin xyz="-0.132096 0.079757 -0.060705" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="Component12_6"/>
+  <axis xyz="-0.0 0.0 1.0"/>
+</joint>
+
+</robot>
