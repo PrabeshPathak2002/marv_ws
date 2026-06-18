@@ -51,6 +51,7 @@ A previous workspace may live at `~/ros2_ws_archive` if you migrated from an old
 ### marv_vision
 
 - **Nodes:** `f_cam_node`, `d_cam_node`
+- **Front camera:** Blue Robotics **exploreHD** USB (V4L2 `/dev/video0`, MJPEG 1280×720) — see [INSTRUCTIONS.md](INSTRUCTIONS.md) §4.2
 - **Library:** `marv_vision/lib/` — camera pipelines, coordinates, VSLAM, string formatting, YOLO inference
 - **Weights:** `front_model.pt` (14-class YOLO) · Pre-qual uses **OpenCV** (`vision_profile:=prequal_cv`) — [VISION_PREQUAL.md](VISION_PREQUAL.md)
 - **Down camera:** `down_model.pt` still a placeholder until trained

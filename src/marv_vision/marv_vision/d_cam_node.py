@@ -19,16 +19,25 @@ class DCamNode(Node):
     self.declare_parameter('use_sim', False)
     self.declare_parameter('sim_image_topic', SIM_IMAGE_TOPIC)
     self.declare_parameter('camera_index', 1)
+    self.declare_parameter('camera_device', '')
+    self.declare_parameter('frame_fps', 30.0)
+    self.declare_parameter('fourcc', 'MJPG')
     self.declare_parameter('conf_threshold', 0.25)
-    self.declare_parameter('image_width', 640)
-    self.declare_parameter('image_height', 480)
+    self.declare_parameter('image_width', 1280)
+    self.declare_parameter('image_height', 720)
 
     use_sim = self.get_parameter('use_sim').value
+    device = self.get_parameter('camera_device').value
     self._camera = CameraInput(
         self,
         use_sim=use_sim,
         sim_image_topic=self.get_parameter('sim_image_topic').value,
         camera_index=self.get_parameter('camera_index').value,
+        camera_device=device,
+        frame_width=int(self.get_parameter('image_width').value),
+        frame_height=int(self.get_parameter('image_height').value),
+        frame_fps=self.get_parameter('frame_fps').value,
+        fourcc=self.get_parameter('fourcc').value,
     )
 
     self.detection_pub = self.create_publisher(String, 'd_cam/detections', 10)

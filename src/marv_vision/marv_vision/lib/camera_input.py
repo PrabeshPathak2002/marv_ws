@@ -12,6 +12,8 @@ try:
 except (ImportError, AttributeError):
     CvBridge = None
 
+from marv_vision.lib.camera_usb import describe_capture, open_v4l2_capture
+
 
 class CameraInput:
     """Hardware (VideoCapture) or simulation (sensor_msgs/Image + CvBridge)."""
@@ -22,6 +24,11 @@ class CameraInput:
         use_sim,
         sim_image_topic,
         camera_index=0,
+        camera_device='',
+        frame_width=None,
+        frame_height=None,
+        frame_fps=None,
+        fourcc='MJPG',
     ):
         self._node = node
         self._use_sim = use_sim
@@ -44,13 +51,20 @@ class CameraInput:
                 node.get_logger().error(
                     'opencv (cv2) required for hardware mode but is not installed')
                 return
-            self._capture = cv2.VideoCapture(int(camera_index))
-            if not self._capture.isOpened():
+            device = camera_device if camera_device else str(camera_index)
+            self._capture = open_v4l2_capture(
+                device,
+                width=frame_width,
+                height=frame_height,
+                fps=frame_fps,
+                fourcc=fourcc,
+            )
+            if self._capture is None or not self._capture.isOpened():
                 node.get_logger().error(
-                    f'Failed to open camera index {camera_index}')
+                    f'Failed to open camera device {device}')
             else:
                 node.get_logger().info(
-                    f'Hardware mode: opened camera index {camera_index}')
+                    f'Hardware mode: {device} ({describe_capture(self._capture)})')
 
     def _sim_image_callback(self, msg: Image):
         if self._bridge is None:

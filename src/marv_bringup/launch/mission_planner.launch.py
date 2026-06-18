@@ -18,6 +18,7 @@ def generate_launch_description():
     plan_file = LaunchConfiguration('plan_file')
     enable_control = LaunchConfiguration('enable_control')
     target_depth_m = LaunchConfiguration('target_depth_m')
+    depth_hold_enabled = LaunchConfiguration('depth_hold_enabled')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -40,6 +41,11 @@ def generate_launch_description():
             default_value='1.0',
             description='Depth hold target (meters).',
         ),
+        DeclareLaunchArgument(
+            'depth_hold_enabled',
+            default_value='true',
+            description='Master control heave from pose. Disable when ArduPilot ALT_HOLD holds depth.',
+        ),
         Node(
             package='marv_control',
             executable='master_control_node',
@@ -48,6 +54,7 @@ def generate_launch_description():
             parameters=[{
                 'enable_control': enable_control,
                 'target_depth_m': target_depth_m,
+                'depth_hold_enabled': depth_hold_enabled,
                 'config_file': config_file,
                 'planner_mode': True,
                 'active_behavior': 'hold',

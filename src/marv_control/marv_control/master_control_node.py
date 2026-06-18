@@ -12,6 +12,7 @@ from std_msgs.msg import String
 
 from marv_control.lib import avoid_obstacles, close_grip, deploy_torpedo, open_grip
 from marv_control.lib.cmd_merge import behavior_to_twist, merge_twists
+from marv_control.lib.cmd_smooth import smooth_command
 from marv_control.lib.config_loader import (
     behavior_config,
     control_config,
@@ -70,6 +71,8 @@ class MasterControlNode(Node):
     self._mission_started = None
     self._mission_ctx = MissionContext()
     self._mission_done = False
+    self._last_cmd = {'surge': 0.0, 'sway': 0.0, 'heave': 0.0, 'yaw': 0.0}
+    self._cmd_smooth_step = float(ctrl.get('command_smooth_step', 0.035))
 
     self._activate_behavior(self.get_parameter('active_behavior').value)
 
@@ -115,6 +118,7 @@ class MasterControlNode(Node):
     self._mission_started = self.get_clock().now()
     self._mission_ctx = MissionContext()
     self._mission_done = False
+    self._last_cmd = {'surge': 0.0, 'sway': 0.0, 'heave': 0.0, 'yaw': 0.0}
     self.set_parameters([
         Parameter('active_behavior', Parameter.Type.STRING, behavior_key),
     ])
@@ -131,6 +135,9 @@ class MasterControlNode(Node):
     self.mission_event_pub.publish(msg)
 
   def control_loop(self):
+    if not self.get_parameter('enable_control').value:
+      return
+
     if self._mission is None or self._mission_done:
       self.cmd_vel_pub.publish(self._compute_cmd_vel(None))
       return
@@ -148,6 +155,10 @@ class MasterControlNode(Node):
 
     result = self._mission.step(self._mission_ctx)
     behavior_cmd = result.cmd
+    if behavior_cmd:
+      behavior_cmd = smooth_command(
+          self._last_cmd, behavior_cmd, max_step=self._cmd_smooth_step)
+      self._last_cmd = dict(behavior_cmd)
 
     open_grip(self)
     close_grip(self)
@@ -155,8 +166,11 @@ class MasterControlNode(Node):
 
     cmd = self._compute_cmd_vel(behavior_cmd)
 
-    if self._mission_key in ('depth_hold', 'traverse_gate', 'detect_path',
-                             'pass_gate', 'transit_forward', 'circle_marker'):
+    if self._mission_key in (
+        'depth_hold', 'traverse_gate', 'detect_path', 'pass_gate', 'pass_gate_clear',
+        'transit_forward', 'circle_marker', 'find_gate', 'find_return_gate', 'find_marker',
+        'approach_marker',
+    ):
       range_m = self._forward_range_m if self._forward_range_valid else None
       obstacle_cmd = avoid_obstacles(
           self, self.vision_data,

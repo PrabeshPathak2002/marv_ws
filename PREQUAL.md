@@ -113,7 +113,8 @@ ros2 launch marv_bringup prequal_bringup.launch.py \
 ### Software
 - [ ] `colcon build` + `source install/setup.bash`
 - [ ] `numpy<2` installed (`pip3 show numpy`)
-- [ ] Front camera sees gate at pool depth
+- [ ] exploreHD USB detected (`~/marv_ws/scripts/check_explorehd.sh`)
+- [ ] Front camera sees gate at pool depth (1280×720 MJPEG on `/dev/video0`)
 - [ ] `ros2 topic echo f_cam/detections` shows `black_gate:...` / `yellow_pole:...`
 - [ ] `/sensors/pose` updating (required for transit + turn)
 - [ ] `enable_control:=false` verified on bench before pool

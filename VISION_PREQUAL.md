@@ -19,10 +19,13 @@ Tune HSV in: `src/marv_bringup/config/prequal_cv.yaml`
 ```bash
 source ~/marv_ws/install/setup.bash
 
-# Bench / pool — OpenCV pre-qual vision
+# Bench / pool — OpenCV pre-qual vision (exploreHD USB)
 ros2 run marv_vision f_cam_node --ros-args \
   -p vision_profile:=prequal_cv \
-  -p conf_threshold:=0.30
+  -p conf_threshold:=0.30 \
+  -p camera_device:=/dev/video0 \
+  -p image_width:=1280 \
+  -p image_height:=720
 
 ros2 topic echo /f_cam/detections
 # black_gate:0.65,x:0.50,y:0.55;yellow_pole:0.82,x:0.48,y:0.40
@@ -44,6 +47,8 @@ ros2 launch marv_bringup prequal_bringup.launch.py enable_control:=false
 | `min_confidence` | Detection threshold |
 
 **Black gate hard to see?** Add white corner tape on the gate, or lower `gate_v_max` slightly. Rely on **Ping** for pass-through timing.
+
+**Camera:** Front sensor is the **Blue Robotics exploreHD** USB camera. Verify with `~/marv_ws/scripts/check_explorehd.sh`. Tune at **1 m depth** — underwater color/exposure differs from bench.
 
 **Yellow false positives?** Raise `yellow_s_min` or `yellow_min_height_frac`.
 

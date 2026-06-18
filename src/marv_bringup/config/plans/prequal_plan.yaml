@@ -1,4 +1,4 @@
-# RoboSub pre-qualification mission graph.
+# RoboSub pre-qualification mission graph (EagleAUV ros2_ws flow).
 
 start: wait
 
@@ -7,7 +7,14 @@ missions:
     behavior: wait_submerged
     timeout: 30
     transitions:
+      success: find_gate
+
+  find_gate:
+    behavior: find_gate
+    timeout: 90
+    transitions:
       success: gate_approach
+      timeout: gate_approach
 
   gate_approach:
     behavior: traverse_gate
@@ -24,13 +31,29 @@ missions:
 
   transit:
     behavior: transit_forward
-    timeout: 180
+    timeout: 25
+    transitions:
+      success: approach_marker
+      failure: find_marker
+      timeout: find_marker
+
+  find_marker:
+    behavior: find_marker
+    timeout: 60
+    transitions:
+      success: approach_marker
+      timeout: circle
+
+  approach_marker:
+    behavior: approach_marker
+    timeout: 90
     transitions:
       success: circle
+      timeout: circle
 
   circle:
     behavior: circle_marker
-    timeout: 120
+    timeout: 60
     transitions:
       success: turn
 
@@ -38,7 +61,14 @@ missions:
     behavior: turn_around
     timeout: 60
     transitions:
+      success: find_return_gate
+
+  find_return_gate:
+    behavior: find_return_gate
+    timeout: 90
+    transitions:
       success: gate_return
+      timeout: gate_return
 
   gate_return:
     behavior: traverse_gate
@@ -50,6 +80,12 @@ missions:
   gate_pass_return:
     behavior: pass_gate
     timeout: 30
+    transitions:
+      success: gate_clear
+
+  gate_clear:
+    behavior: pass_gate_clear
+    timeout: 20
     transitions:
       success: hold
 

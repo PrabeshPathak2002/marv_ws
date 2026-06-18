@@ -9,6 +9,8 @@ from launch_ros.actions import Node
 def generate_launch_description():
     command_backend = LaunchConfiguration('command_backend')
     use_ping = LaunchConfiguration('use_ping')
+    hold_depth_with_autopilot = LaunchConfiguration('hold_depth_with_autopilot')
+    publish_pose = LaunchConfiguration('publish_pose')
     ping_range_topic = LaunchConfiguration('ping_range_topic')
 
     return LaunchDescription([
@@ -26,6 +28,16 @@ def generate_launch_description():
             description='Subscribe to Ping1D range and publish /sensors/range_forward.',
         ),
         DeclareLaunchArgument(
+            'hold_depth_with_autopilot',
+            default_value='false',
+            description='ALT_HOLD/MANUAL holds depth; do not override vertical RC from /cmd_vel heave.',
+        ),
+        DeclareLaunchArgument(
+            'publish_pose',
+            default_value='true',
+            description='Publish /sensors/pose from MAVROS. Set false when Gazebo pose bridge is used.',
+        ),
+        DeclareLaunchArgument(
             'ping_range_topic',
             default_value='/ping1d/range',
             description='sensor_msgs/Range topic from Ping driver or MAVROS.',
@@ -38,6 +50,8 @@ def generate_launch_description():
             parameters=[{
                 'command_backend': command_backend,
                 'use_ping': use_ping,
+                'hold_depth_with_autopilot': hold_depth_with_autopilot,
+                'publish_pose': publish_pose,
                 'ping_range_topic': ping_range_topic,
             }],
         ),

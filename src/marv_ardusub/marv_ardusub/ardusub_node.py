@@ -23,6 +23,7 @@ class ArdusubNode(Node):
     super().__init__('ardusub_node')
     self.declare_parameter('use_ping', True)
     self.declare_parameter('ping_range_topic', '/ping1d/range')
+    self.declare_parameter('publish_pose', True)
 
     setup_position_publishers(self)
     setup_mavros_subscriptions(self)
@@ -51,6 +52,8 @@ class ArdusubNode(Node):
     if self.get_parameter('use_ping').value:
       from marv_ardusub.lib.ping_io import publish_forward_range
       publish_forward_range(self)
+    if not self.get_parameter('publish_pose').value:
+      return
     inputs = read_sensor_inputs(self)
     estimate = estimate_position(self, inputs)
     publish_position_estimate(self, estimate)

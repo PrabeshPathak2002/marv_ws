@@ -170,6 +170,74 @@ Tune thresholds in `src/marv_bringup/config/marv.yaml` under `ping:` and `behavi
 
 ---
 
+## 4.2 Blue Robotics exploreHD USB (front camera)
+
+The front **exploreHD** (DeepWater Exploration) plugs into the Jetson over **USB** as a UVC camera (`/dev/video*`). It is separate from the Ping (`/dev/ttyUSB*`) and ARK FPV (`/dev/ttyACM*`).
+
+```
+exploreHD --USB--> Jetson (/dev/video0) --> f_cam_node --> /f_cam/detections
+```
+
+| Setting | Default | Notes |
+|---------|---------|--------|
+| `camera_device` | `/dev/video0` | MJPEG node (first in exploreHD group) |
+| Resolution | 1280×720 @ 30 fps | MJPEG (`fourcc:=MJPG`) |
+| H.264 node | `/dev/video2` (typical) | Not used by OpenCV path |
+
+Each exploreHD creates **four** `/dev/video*` nodes. Use the **MJPEG** node for `f_cam_node` (OpenCV). The third node is usually hardware H.264.
+
+### Find the USB device
+
+```bash
+chmod +x ~/marv_ws/scripts/check_explorehd.sh
+~/marv_ws/scripts/check_explorehd.sh
+
+# Or manually:
+v4l2-ctl --list-devices
+ls -l /dev/video*
+```
+
+If multiple cameras are connected, pick the exploreHD MJPEG path from `v4l2-ctl --list-devices`.
+
+### Verify capture
+
+```bash
+source ~/marv_ws/install/setup.bash
+
+# OpenCV pre-qual vision (default exploreHD device)
+ros2 run marv_vision f_cam_node --ros-args \
+  -p vision_profile:=prequal_cv \
+  -p camera_device:=/dev/video0
+
+ros2 topic echo /f_cam/detections
+```
+
+Override device or resolution if needed:
+
+```bash
+ros2 run marv_vision f_cam_node --ros-args \
+  -p camera_device:=/dev/video0 \
+  -p image_width:=1280 \
+  -p image_height:=720 \
+  -p fourcc:=MJPG
+```
+
+### Full stack (exploreHD + Ping + ARK FPV)
+
+```bash
+ros2 launch marv_bringup prequal_bringup.launch.py \
+  enable_control:=false \
+  use_ping_driver:=true \
+  ping_device:=/dev/ttyUSB0 \
+  camera_device:=/dev/video0
+```
+
+(`camera_device` is passed through `vision.launch.py`.)
+
+Config reference: `src/marv_bringup/config/camera_front.yaml` and `marv.yaml` → `camera_front`.
+
+---
+
 Use this when the ARK FPV is plugged in and you want to confirm the link before starting Marv.
 
 **Terminal 1 — start MAVROS:**
@@ -385,7 +453,7 @@ Vision nodes support hardware vs Unity sim via `use_sim`:
 
 | Mode | `use_sim` | Input |
 |------|-----------|--------|
-| Hardware (default) | `false` | OpenCV `VideoCapture` (`camera_index` 0 / 1) |
+| Hardware (default) | `false` | exploreHD USB via V4L2 (`camera_device` `/dev/video0`, MJPEG 1280×720) |
 | Unity HITL | `true` | `/unity/f_cam/image_raw`, `/unity/d_cam/image_raw` |
 
 ```bash

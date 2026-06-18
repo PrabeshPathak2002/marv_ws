@@ -1,5 +1,5 @@
 # Marv AUV vehicle and behavior configuration (per-vehicle profile).
-# Inspired by Inspiration Robotics config/onyx.json pattern.
+# Inspired by Inspiration Robotics config/onyx.json and EagleAUV ros2_ws pre-qual.
 
 vehicle:
   name: marv
@@ -9,6 +9,16 @@ control:
   target_depth_m: 1.0
   depth_kp: 0.25
   home_xy: [0.0, 0.0]
+  command_smooth_step: 0.035
+
+# Blue Robotics exploreHD USB — front camera on Jetson (/dev/video*).
+camera_front:
+  model: exploreHD
+  device: /dev/video0
+  fourcc: MJPG
+  width: 1280
+  height: 720
+  fps: 30
 
 # Blue Robotics Ping1D — USB serial on Jetson (/dev/ttyUSB*).
 ping:
@@ -22,11 +32,27 @@ ping:
   stop_m: 0.6
 
 behaviors:
+  wait_submerged:
+    duration_s: 5.0
+  find_gate:
+    gate_classes: [black_gate, gate]
+    conf_min: 0.20
+    search_yaw: 0.12
+    forward_surge: 0.0
+  find_return_gate:
+    gate_classes: [black_gate, gate]
+    conf_min: 0.20
+    search_yaw: 0.12
+    forward_surge: 0.32
   traverse_gate:
     gate_classes: [black_gate, gate]
-    conf_min: 0.30
-    center_deadband: 0.08
-    aligned_frames_required: 15
+    conf_min: 0.20
+    center_deadband: 0.20
+    commit_area: 0.12
+    commit_deadband: 0.30
+    surge_approach: 0.32
+    yaw_kp: 0.26
+    gate_max_yaw: 0.16
     approach_slow_m: 2.5
     stop_m: 0.6
   detect_path:
@@ -37,23 +63,51 @@ behaviors:
   return_home:
     arrive_radius_m: 0.3
   pass_gate:
-    surge_speed: 0.35
-    duration_s: 6.0
+    surge_speed: 0.46
+    duration_s: 7.0
     gate_clear_m: 2.5
     approach_slow_m: 2.5
     stop_m: 0.6
     use_ping_complete: true
   transit_forward:
-    target_distance_m: 10.0
-    surge_speed: 0.30
+    surge_speed: 0.42
+    min_transit_s: 6.0
+    max_transit_s: 20.0
+    marker_classes: [yellow_pole]
+    conf_min: 0.25
+    use_timed_transit: true
+  find_marker:
+    marker_classes: [yellow_pole]
+    conf_min: 0.25
+    search_yaw: 0.12
+    forward_surge: 0.22
+  approach_marker:
+    marker_classes: [yellow_pole]
+    conf_min: 0.25
+    center_deadband: 0.12
+    close_area: 0.055
+    area_kp: 9.0
+    max_surge: 0.25
+    min_surge: 0.08
+    yaw_kp: 0.55
+    max_yaw: 0.28
   circle_marker:
     marker_classes: [yellow_pole]
-    conf_min: 0.30
-    yaw_rate: 0.25
-    surge_speed: 0.15
-    orbit_duration_s: 45.0
+    conf_min: 0.25
+    orbit_duration_s: 24.0
+    side_step_duration_s: 5.0
+    side_pass_duration_s: 7.0
+    cross_behind_duration_s: 7.0
+    u_sway_speed: -0.32
+    u_cross_sway_speed: 0.36
+    u_forward_speed: 0.26
+    search_yaw: 0.12
+    yaw_kp: 0.55
+    max_yaw: 0.28
+  pass_gate_clear:
+    surge_speed: 0.46
+    duration_s: 7.0
+    use_ping_complete: false
   turn_around:
     target_delta_rad: 3.14159
     yaw_rate: 0.30
-  wait_submerged:
-    duration_s: 3.0

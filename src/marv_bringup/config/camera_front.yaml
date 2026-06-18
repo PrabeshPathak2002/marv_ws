@@ -1,0 +1,13 @@
+# Blue Robotics DeepWater Exploration exploreHD USB (front camera).
+# UVC camera: Linux creates ~4 /dev/video* nodes per unit. Use the MJPEG node
+# (usually the first in the group, e.g. /dev/video0). H.264 is often video2.
+#
+# Verify: scripts/check_explorehd.sh  or  v4l2-ctl --list-devices
+
+camera_front:
+  model: exploreHD
+  device: /dev/video0
+  fourcc: MJPG
+  width: 1280
+  height: 720
+  fps: 30

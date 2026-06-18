@@ -4,8 +4,15 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, Twist
 
 
 def depth_from_pose(pose_msg: PoseWithCovarianceStamped):
-    """Depth in meters (NED z, positive down)."""
-    return float(pose_msg.pose.pose.position.z)
+    """Depth in meters below surface (positive down).
+
+    Gazebo/map poses use ENU (z up, underwater z < 0). MAVROS odom uses NED (z down).
+    """
+    z = float(pose_msg.pose.pose.position.z)
+    frame = (pose_msg.header.frame_id or '').lower()
+    if frame in ('map', 'world', 'gazebo'):
+        return max(0.0, -z)
+    return z
 
 
 def compute_depth_hold_cmd(

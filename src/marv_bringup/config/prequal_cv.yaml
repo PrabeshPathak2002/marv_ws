@@ -1,20 +1,32 @@
-# OpenCV HSV tuning for pre-qual (black gate + yellow pole).
-# Tune in the pool; see VISION_PREQUAL.md
+# OpenCV HSV tuning for pre-qual (EagleAUV ros2_ws gate + marker detectors).
 
 prequal_cv:
-  # Yellow pole (HSV, OpenCV scale H: 0-180)
   yellow_h_low: 18
   yellow_h_high: 42
   yellow_s_min: 80
   yellow_v_min: 80
-  yellow_min_height_frac: 0.12   # min bbox height vs image height
-  yellow_min_aspect: 1.4        # height / width
+  yellow_min_height_frac: 0.12
+  yellow_min_aspect: 1.4
 
-  # Black gate (dark wide region in lower frame)
-  gate_v_max: 70                 # max V channel for "dark"
-  gate_s_max: 120
-  gate_min_width_frac: 0.20      # min bbox width vs image width
-  gate_max_height_frac: 0.45     # gate should be wider than tall
-  gate_roi_top_frac: 0.15        # ignore top 15% (surface glare)
+  gate_v_max: 100
+  gate_s_max: 140
+  gate_roi_top_frac: 0.10
+  red_h_low1: 0
+  red_h_high1: 12
+  red_h_low2: 168
+  red_h_high2: 180
+  red_s_min: 60
+  red_v_min: 40
 
-  min_confidence: 0.30
+  leg_min_height_px: 25
+  leg_min_width_frac: 0.12
+  leg_min_aspect: 1.5
+  full_min_width_frac: 0.12
+  full_min_aspect: 0.45
+  pair_min_separation_frac: 0.16
+  task1_pair_min_separation_frac: 0.18
+  pair_height_ratio_min: 0.50
+  pair_vertical_delta_frac: 0.45
+  pair_min_width_height_ratio: 0.60
+
+  min_confidence: 0.20

@@ -27,6 +27,7 @@ def generate_launch_description():
     target_depth_m = LaunchConfiguration('target_depth_m')
     use_sim = LaunchConfiguration('use_sim')
     use_ping_driver = LaunchConfiguration('use_ping_driver')
+    camera_device = LaunchConfiguration('camera_device')
 
     return LaunchDescription([
         DeclareLaunchArgument('use_mavros', default_value='true'),
@@ -47,9 +48,23 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument('use_sim', default_value='false'),
         DeclareLaunchArgument('use_ping_driver', default_value='false'),
+        DeclareLaunchArgument(
+            'camera_device',
+            default_value='/dev/video0',
+            description='exploreHD V4L2 MJPEG device for f_cam_node.',
+        ),
+        DeclareLaunchArgument(
+            'ping_device',
+            default_value='/dev/ttyUSB0',
+            description='Ping1D USB serial port (when use_ping_driver:=true).',
+        ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(launch_dir, 'ping.launch.py')),
+            launch_arguments={
+                'use_ping_driver': 'true',
+                'ping_device': LaunchConfiguration('ping_device'),
+            }.items(),
             condition=IfCondition(use_ping_driver),
         ),
         IncludeLaunchDescription(
@@ -72,6 +87,7 @@ def generate_launch_description():
                 'use_down_cam': 'false',
                 'vision_profile': 'prequal_cv',
                 'f_cam_conf_threshold': '0.30',
+                'camera_device': camera_device,
             }.items(),
             condition=IfCondition(use_vision),
         ),

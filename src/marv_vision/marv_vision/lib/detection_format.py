@@ -2,7 +2,7 @@
 
 
 def format_detection_string(detections):
-    """Format detections as: class:conf,x:0.42,y:0.55;..."""
+    """Format detections as: class:conf,x:0.42,y:0.55,area:0.08;..."""
     if not detections:
         return ''
     parts = []
@@ -10,9 +10,14 @@ def format_detection_string(detections):
         name = det.get('class_name', '?')
         conf = det.get('confidence', 0.0)
         part = f'{name}:{conf:.2f}'
-        coord = det.get('coord')
-        if coord:
+        x = det.get('x')
+        y = det.get('y')
+        if x is not None and y is not None:
+            part += f',x:{float(x):.3f},y:{float(y):.3f}'
+        elif (coord := det.get('coord')):
             part += f',x:{coord["norm_x"]:.3f},y:{coord["norm_y"]:.3f}'
+        if 'area' in det:
+            part += f',area:{float(det["area"]):.4f}'
         parts.append(part)
     return ';'.join(parts)
 

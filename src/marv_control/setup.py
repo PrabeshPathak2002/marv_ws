@@ -26,6 +26,9 @@ setup(
         'console_scripts': [
             'master_control_node = marv_control.master_control_node:main',
             'mission_planner_node = marv_control.mission_planner_node:main',
+            'auv_keyboard_teleop_node = marv_control.auv_keyboard_teleop_node:main',
+            'demo_recorder_node = marv_control.demo_recorder_node:main',
+            'demo_replay_node = marv_control.demo_replay_node:main',
         ],
     },
 )

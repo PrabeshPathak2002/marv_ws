@@ -14,6 +14,13 @@ def generate_launch_description():
     vision_profile = LaunchConfiguration('vision_profile')
     f_cam_conf = LaunchConfiguration('f_cam_conf_threshold')
     model_path = LaunchConfiguration('model_path')
+    camera_device = LaunchConfiguration('camera_device')
+    image_width = LaunchConfiguration('image_width')
+    image_height = LaunchConfiguration('image_height')
+    frame_fps = LaunchConfiguration('frame_fps')
+    fourcc = LaunchConfiguration('fourcc')
+    sim_image_topic = LaunchConfiguration('sim_image_topic')
+    publish_debug_image = LaunchConfiguration('publish_debug_image')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -46,6 +53,41 @@ def generate_launch_description():
             default_value='',
             description='Override YOLO weights path (empty = use profile default).',
         ),
+        DeclareLaunchArgument(
+            'camera_device',
+            default_value='/dev/video0',
+            description='exploreHD V4L2 MJPEG device (first /dev/video* in group).',
+        ),
+        DeclareLaunchArgument(
+            'image_width',
+            default_value='1280',
+            description='Capture width (exploreHD 720p default).',
+        ),
+        DeclareLaunchArgument(
+            'image_height',
+            default_value='720',
+            description='Capture height.',
+        ),
+        DeclareLaunchArgument(
+            'frame_fps',
+            default_value='30.0',
+            description='Requested capture frame rate.',
+        ),
+        DeclareLaunchArgument(
+            'fourcc',
+            default_value='MJPG',
+            description='V4L2 pixel format (MJPG recommended for exploreHD).',
+        ),
+        DeclareLaunchArgument(
+            'sim_image_topic',
+            default_value='/unity/f_cam/image_raw',
+            description='Image topic when use_sim=true (Unity or Gazebo bridge).',
+        ),
+        DeclareLaunchArgument(
+            'publish_debug_image',
+            default_value='false',
+            description='Publish annotated front camera on /f_cam/image_annotated.',
+        ),
         Node(
             package='marv_vision',
             executable='f_cam_node',
@@ -53,9 +95,16 @@ def generate_launch_description():
             output='screen',
             parameters=[{
                 'use_sim': use_sim,
+                'sim_image_topic': sim_image_topic,
                 'vision_profile': vision_profile,
                 'conf_threshold': f_cam_conf,
                 'model_path': model_path,
+                'camera_device': camera_device,
+                'image_width': image_width,
+                'image_height': image_height,
+                'frame_fps': frame_fps,
+                'fourcc': fourcc,
+                'publish_debug_image': publish_debug_image,
             }],
             condition=IfCondition(use_front_cam),
         ),

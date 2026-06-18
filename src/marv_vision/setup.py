@@ -26,6 +26,7 @@ setup(
     entry_points={
         'console_scripts': [
             'f_cam_node = marv_vision.f_cam_node:main',
+            'f_cam_debug = marv_vision.f_cam_debug:main',
             'd_cam_node = marv_vision.d_cam_node:main',
         ],
     },

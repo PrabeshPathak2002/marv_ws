@@ -94,12 +94,12 @@ class Ping1dComponent(Node):
     # distance: Units: mm; Distance to the target.\n
     # confidence: Units: %; Confidence in the distance measurement.\n
     simple_data = self.ping.get_distance_simple()
-    # print("simple data:%d\n", simple_data)
+    if not simple_data:
+      return
 
-    # scan_start: Units: mm; The beginning of the scan range in mm from the transducer.\n
-    # scan_length: Units: mm; The length of the scan range.\n
     range_data = self.ping.get_range()
-    # print("scan_start: %s\tscan_length: %s " % (range_data["scan_start"], range_data["scan_length"]))
+    if not range_data:
+      return
 
     # gain_setting: The current gain setting. 0: 0.6, 1: 1.8, 2: 5.5, 3: 12.9, 4: 30.2, 5: 66.1, 6: 144\n
     gain = self.ping.get_gain_setting()
@@ -144,11 +144,15 @@ class Ping1dComponent(Node):
     interval_msg = Float32()
     gain_msg = Float32()
     mode_msg = Float32()
-    dist_msg.data = float(simple_data["distance"]/1000)
-    speed_msg.data = float(speed_sound["speed_of_sound"]/1000)
-    interval_msg.data = float(interval["ping_interval"])
-    gain_msg.data = float(gain["gain_setting"])
-    mode_msg.data = float(mode_auto["mode_auto"])
+    dist_msg.data = float(simple_data["distance"] / 1000)
+    if speed_sound:
+      speed_msg.data = float(speed_sound["speed_of_sound"] / 1000)
+    if interval:
+      interval_msg.data = float(interval["ping_interval"])
+    if gain:
+      gain_msg.data = float(gain["gain_setting"])
+    if mode_auto:
+      mode_msg.data = float(mode_auto["mode_auto"])
     self.dist_pub_.publish(dist_msg)
     self.speed_pub_.publish(speed_msg)
     self.interval_pub_.publish(interval_msg)

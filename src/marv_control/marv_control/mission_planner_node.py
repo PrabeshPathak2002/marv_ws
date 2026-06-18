@@ -21,6 +21,7 @@ class MissionPlannerNode(Node):
     self.declare_parameter('plan_file', '')
     self.declare_parameter('config_file', '')
     self.declare_parameter('auto_start', True)
+    self.declare_parameter('start_delay_s', 3.0)
 
     self._config = load_marv_config(self.get_parameter('config_file').value)
     self._plan = self._load_plan(self.get_parameter('plan_file').value)
@@ -37,11 +38,24 @@ class MissionPlannerNode(Node):
     self._timeout_s = 0.0
     self._finished = False
     self._waiting_event = False
+    self._started = False
 
     self._timer = self.create_timer(0.5, self._watchdog_tick)
 
     if self.get_parameter('auto_start').value:
-      self._start_plan()
+      delay = float(self.get_parameter('start_delay_s').value)
+      if delay > 0.0:
+        self._start_timer = self.create_timer(delay, self._delayed_start)
+      else:
+        self._start_plan()
+
+  def _delayed_start(self):
+    if self._started:
+      return
+    if hasattr(self, '_start_timer') and self._start_timer is not None:
+      self._start_timer.cancel()
+      self._start_timer = None
+    self._start_plan()
 
   def _load_plan(self, plan_file):
     path = Path(plan_file)
@@ -54,6 +68,7 @@ class MissionPlannerNode(Node):
   def _start_plan(self):
     if self._plan is None:
       return
+    self._started = True
     start = self._plan.get('start')
     if not start:
       self.get_logger().error('Mission plan missing start node')

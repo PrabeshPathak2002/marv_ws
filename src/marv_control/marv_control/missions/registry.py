@@ -1,8 +1,11 @@
 """Mission name → class registry."""
 
+from marv_control.missions.approach_marker import ApproachMarkerMission
 from marv_control.missions.circle_marker import CircleMarkerMission
 from marv_control.missions.depth_hold import DepthHoldMission
 from marv_control.missions.detect_path import DetectPathMission
+from marv_control.missions.find_gate import FindGateMission
+from marv_control.missions.find_marker import FindMarkerMission
 from marv_control.missions.hold import HoldMission
 from marv_control.missions.pass_gate import PassGateMission
 from marv_control.missions.return_home import ReturnHomeMission
@@ -19,9 +22,14 @@ MISSION_REGISTRY = {
     'hold': HoldMission,
     'wait_submerged': WaitSubmergedMission,
     'pass_gate': PassGateMission,
+    'pass_gate_clear': PassGateMission,
     'transit_forward': TransitForwardMission,
     'circle_marker': CircleMarkerMission,
     'turn_around': TurnAroundMission,
+    'find_gate': FindGateMission,
+    'find_return_gate': FindGateMission,
+    'find_marker': FindMarkerMission,
+    'approach_marker': ApproachMarkerMission,
 }
 
 
