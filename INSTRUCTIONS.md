@@ -83,14 +83,92 @@ ARK FPV (USB/MAVLink)
 
 | Module | Package | Job |
 |--------|---------|-----|
-| `sensor_io` | marv_ardusub | Subscribe to MAVROS IMU + odometry |
+| `sensor_io` | marv_ardusub | Subscribe to MAVROS IMU + odometry + forward Ping range |
+| `ping_io` | marv_ardusub | Ping1D → `/sensors/range_forward` |
 | `pos_est` | marv_ardusub | Publish `/sensors/pose`, `/sensors/velocity` only |
 | `master_control_node` | marv_control | Mission logic + depth-hold `cmd_vel` |
 | `mavros_actuation` | marv_ardusub | Send `cmd_vel` to the flight controller |
 
 ---
 
-## 4. Procedure A — Verify MAVROS only
+## 4.1 Blue Robotics Ping1D (USB on Jetson)
+
+The front **Ping1D** plugs into the Jetson over **USB** (shows up as `/dev/ttyUSB0` or similar — not the ARK FPV `/dev/ttyACM*` ports). The driver is already in this workspace at `src/ping_sonar_ros`.
+
+```
+Ping1D --USB--> Jetson (/dev/ttyUSB0) --> ping1d_node --> /ping1d/range
+                                                      --> /sensors/range_forward
+```
+
+### One-time build
+
+```bash
+cd ~/marv_ws/src/ping_sonar_ros/ping_sonar_ros/ping-python
+python3 setup.py install --user
+cd ~/marv_ws
+colcon build --packages-select ping_sonar_ros marv_ardusub marv_bringup
+```
+
+### USB permissions
+
+Your user must be in the `dialout` group (same as ARK FPV):
+
+```bash
+groups | grep dialout
+# If missing:
+sudo usermod -aG dialout $USER
+# Log out and back in
+```
+
+### Find the USB port
+
+Plug in the Ping, then:
+
+```bash
+dmesg | tail -15
+ls -l /dev/ttyUSB*
+```
+
+Use the port shown (often `/dev/ttyUSB0` when only the Ping is on USB serial).
+
+### Verify range
+
+```bash
+source ~/marv_ws/install/setup.bash
+
+# Ping driver only (set port after ls above)
+ros2 launch marv_bringup ping.launch.py ping_device:=/dev/ttyUSB0
+
+# Other terminal — expect range in meters
+ros2 topic echo /ping1d/range
+```
+
+### Full stack (Ping + ARK FPV)
+
+ARK FPV stays on `/dev/ttyACM0`; Ping stays on `/dev/ttyUSB0` — two separate USB devices.
+
+```bash
+ros2 launch marv_bringup marv_bringup.launch.py \
+  use_ping_driver:=true \
+  ping_device:=/dev/ttyUSB0 \
+  fcu_url:=serial:///dev/ttyACM0:115200
+
+ros2 topic echo /sensors/range_forward
+```
+
+### What Ping is used for
+
+| Behavior | Ping role |
+|----------|-----------|
+| `traverse_gate` | Slow approach as range &lt; 2.5 m |
+| `pass_gate` | Complete when range &gt; `gate_clear_m` (cleared gate) |
+| `avoid_obstacles` | Emergency stop / backup if range &lt; 0.8 m |
+
+Tune thresholds in `src/marv_bringup/config/marv.yaml` under `ping:` and `behaviors.pass_gate`.
+
+**Alternative:** If the Ping is wired through ArduSub/MAVROS instead of ROS, set `ping_range_topic:=/mavros/rangefinder/rangefinder` on `ardusub_node`.
+
+---
 
 Use this when the ARK FPV is plugged in and you want to confirm the link before starting Marv.
 
@@ -369,7 +447,25 @@ python3 -c "from marv_vision.lib.model_config import load_front_model_config; pr
 
 ---
 
-## 12. Related files
+## 12. Mission planner (Inspiration Robotics pattern)
+
+Mission classes live in `marv_control/missions/` with `step()` / `cleanup()` lifecycle.
+YAML graphs in `marv_bringup/config/plans/` define competition sequences (no `eval` branching).
+
+```bash
+# Full stack + YAML planner
+ros2 launch marv_bringup competition_bringup.launch.py enable_control:=true
+
+# tmux layout (bench | sim | competition)
+./scripts/tmux_marv.bash competition
+```
+
+Edit `marv_bringup/config/marv.yaml` for per-vehicle tuning (depth, home position, behavior gains).
+Edit `config/plans/competition_plan.yaml` to reorder tasks without changing Python code.
+
+---
+
+## 13. Related files
 
 | File | Purpose |
 |------|---------|

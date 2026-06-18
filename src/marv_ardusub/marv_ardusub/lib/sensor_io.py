@@ -7,6 +7,8 @@ subscribes to MAVROS topics and passes a normalized dict to pos_est.
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
 
+from marv_ardusub.lib.ping_io import read_forward_range
+
 GRAVITY_M_PER_S2 = 9.80665
 
 # MAVROS serial link to ARK FPV (ArduSub) over USB
@@ -59,6 +61,10 @@ def read_sensor_inputs(node):
     linear_acceleration = (0.0, 0.0, GRAVITY_M_PER_S2)
     position = (0.0, 0.0, depth_m)
     linear_velocity = (0.0, 0.0, 0.0)
+    forward_range_m = None
+    forward_range_valid = False
+
+    forward_range_m, forward_range_valid = read_forward_range(node)
 
     if mavros is None:
         return {
@@ -69,6 +75,8 @@ def read_sensor_inputs(node):
             'linear_acceleration': linear_acceleration,
             'position': position,
             'linear_velocity': linear_velocity,
+            'forward_range_m': forward_range_m,
+            'forward_range_valid': forward_range_valid,
             'mavros_connected': False,
         }
 
@@ -102,5 +110,7 @@ def read_sensor_inputs(node):
         'linear_acceleration': linear_acceleration,
         'position': position,
         'linear_velocity': linear_velocity,
+        'forward_range_m': forward_range_m,
+        'forward_range_valid': forward_range_valid,
         'mavros_connected': mavros.get('imu_rx') or mavros.get('odom_rx'),
     }

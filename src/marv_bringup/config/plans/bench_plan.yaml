@@ -1,0 +1,30 @@
+# Bench / pool test sequence (Inspiration Robotics plan_template.yaml style).
+# ros2 launch marv_bringup competition_bringup.launch.py plan_file:=... enable_control:=true
+
+start: gate
+
+missions:
+  gate:
+    behavior: traverse_gate
+    timeout: 120
+    transitions:
+      success: path
+      default: path
+
+  path:
+    behavior: detect_path
+    timeout: 90
+    transitions:
+      success: home
+      default: home
+
+  home:
+    behavior: return_home
+    timeout: 180
+    transitions:
+      success: hold
+      default: hold
+
+  hold:
+    behavior: hold
+    transitions: {}

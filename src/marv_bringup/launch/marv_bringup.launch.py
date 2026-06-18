@@ -26,6 +26,10 @@ def generate_launch_description():
     target_depth_m = LaunchConfiguration('target_depth_m')
     use_sim = LaunchConfiguration('use_sim')
     use_unity_hil_bridge = LaunchConfiguration('use_unity_hil_bridge')
+    active_behavior = LaunchConfiguration('active_behavior')
+    config_file = LaunchConfiguration('config_file')
+    use_ping_driver = LaunchConfiguration('use_ping_driver')
+    use_ping = LaunchConfiguration('use_ping')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -88,7 +92,32 @@ def generate_launch_description():
             default_value='false',
             description='Start unity_hil_bridge (Unity IMU/pose -> MAVROS HIL).',
         ),
+        DeclareLaunchArgument(
+            'active_behavior',
+            default_value='depth_hold',
+            description='Master control behavior when not using mission planner.',
+        ),
+        DeclareLaunchArgument(
+            'config_file',
+            default_value='',
+            description='Optional marv.yaml path for behavior tuning.',
+        ),
+        DeclareLaunchArgument(
+            'use_ping_driver',
+            default_value='false',
+            description='Start ping_sonar_ros Ping1D node (requires separate install).',
+        ),
+        DeclareLaunchArgument(
+            'use_ping',
+            default_value='true',
+            description='ardusub_node subscribes to Ping range topic.',
+        ),
         LogInfo(msg='Starting Marv AUV stack...'),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(launch_dir, 'ping.launch.py')),
+            condition=IfCondition(use_ping_driver),
+        ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(launch_dir, 'mavros.launch.py')),
@@ -105,6 +134,7 @@ def generate_launch_description():
                 os.path.join(launch_dir, 'ardusub.launch.py')),
             launch_arguments={
                 'command_backend': command_backend,
+                'use_ping': use_ping,
             }.items(),
             condition=IfCondition(use_ardusub),
         ),
@@ -114,6 +144,8 @@ def generate_launch_description():
             launch_arguments={
                 'enable_control': enable_control,
                 'target_depth_m': target_depth_m,
+                'active_behavior': active_behavior,
+                'config_file': config_file,
             }.items(),
             condition=IfCondition(use_control),
         ),

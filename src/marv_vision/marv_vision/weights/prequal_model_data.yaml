@@ -1,0 +1,11 @@
+# Pre-qualification YOLO dataset (2 classes).
+# Train with: see VISION_PREQUAL.md
+# Weights output: prequal_model.pt (same folder)
+
+path: .
+train: train/images
+val: valid/images
+test: test/images
+
+nc: 2
+names: ['black_gate', 'yellow_pole']

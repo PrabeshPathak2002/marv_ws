@@ -10,6 +10,7 @@ def generate_launch_description():
     enable_control = LaunchConfiguration('enable_control')
     target_depth_m = LaunchConfiguration('target_depth_m')
     active_behavior = LaunchConfiguration('active_behavior')
+    config_file = LaunchConfiguration('config_file')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -27,6 +28,11 @@ def generate_launch_description():
             default_value='depth_hold',
             description='depth_hold | traverse_gate | detect_path | return_home | hold',
         ),
+        DeclareLaunchArgument(
+            'config_file',
+            default_value='',
+            description='Optional marv.yaml vehicle/behavior config path.',
+        ),
         Node(
             package='marv_control',
             executable='master_control_node',
@@ -36,6 +42,7 @@ def generate_launch_description():
                 'enable_control': enable_control,
                 'target_depth_m': target_depth_m,
                 'active_behavior': active_behavior,
+                'config_file': config_file,
             }],
         ),
     ])

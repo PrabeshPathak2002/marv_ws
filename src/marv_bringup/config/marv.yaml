@@ -1,0 +1,59 @@
+# Marv AUV vehicle and behavior configuration (per-vehicle profile).
+# Inspired by Inspiration Robotics config/onyx.json pattern.
+
+vehicle:
+  name: marv
+  fcu_url: serial:///dev/ttyACM0:115200
+
+control:
+  target_depth_m: 1.0
+  depth_kp: 0.25
+  home_xy: [0.0, 0.0]
+
+# Blue Robotics Ping1D — USB serial on Jetson (/dev/ttyUSB*).
+ping:
+  connection: usb
+  port: /dev/ttyUSB0
+  baudrate: 115200
+  driver_topic: /ping1d/range
+  obstacle_stop_m: 0.8
+  approach_slow_m: 2.5
+  gate_clear_m: 2.5
+  stop_m: 0.6
+
+behaviors:
+  traverse_gate:
+    gate_classes: [black_gate, gate]
+    conf_min: 0.30
+    center_deadband: 0.08
+    aligned_frames_required: 15
+    approach_slow_m: 2.5
+    stop_m: 0.6
+  detect_path:
+    path_classes: [path]
+    conf_min: 0.35
+    lost_frames_limit: 30
+    min_runtime_s: 5.0
+  return_home:
+    arrive_radius_m: 0.3
+  pass_gate:
+    surge_speed: 0.35
+    duration_s: 6.0
+    gate_clear_m: 2.5
+    approach_slow_m: 2.5
+    stop_m: 0.6
+    use_ping_complete: true
+  transit_forward:
+    target_distance_m: 10.0
+    surge_speed: 0.30
+  circle_marker:
+    marker_classes: [yellow_pole]
+    conf_min: 0.30
+    yaw_rate: 0.25
+    surge_speed: 0.15
+    orbit_duration_s: 45.0
+  turn_around:
+    target_delta_rad: 3.14159
+    yaw_rate: 0.30
+  wait_submerged:
+    duration_s: 3.0

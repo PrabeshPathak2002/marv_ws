@@ -1,0 +1,29 @@
+# Competition-style mission graph (extend for RoboSub tasks).
+# Branching uses transitions.success / failure / timeout (no eval).
+
+start: gate
+
+missions:
+  gate:
+    behavior: traverse_gate
+    timeout: 120
+    transitions:
+      success: path
+      timeout: path
+
+  path:
+    behavior: detect_path
+    timeout: 60
+    transitions:
+      success: home
+      default: home
+
+  home:
+    behavior: return_home
+    timeout: 300
+    transitions:
+      success: hold
+
+  hold:
+    behavior: hold
+    transitions: {}

@@ -1,0 +1,58 @@
+# RoboSub pre-qualification mission graph.
+
+start: wait
+
+missions:
+  wait:
+    behavior: wait_submerged
+    timeout: 30
+    transitions:
+      success: gate_approach
+
+  gate_approach:
+    behavior: traverse_gate
+    timeout: 120
+    transitions:
+      success: gate_pass
+      timeout: gate_pass
+
+  gate_pass:
+    behavior: pass_gate
+    timeout: 30
+    transitions:
+      success: transit
+
+  transit:
+    behavior: transit_forward
+    timeout: 180
+    transitions:
+      success: circle
+
+  circle:
+    behavior: circle_marker
+    timeout: 120
+    transitions:
+      success: turn
+
+  turn:
+    behavior: turn_around
+    timeout: 60
+    transitions:
+      success: gate_return
+
+  gate_return:
+    behavior: traverse_gate
+    timeout: 120
+    transitions:
+      success: gate_pass_return
+      timeout: gate_pass_return
+
+  gate_pass_return:
+    behavior: pass_gate
+    timeout: 30
+    transitions:
+      success: hold
+
+  hold:
+    behavior: hold
+    transitions: {}

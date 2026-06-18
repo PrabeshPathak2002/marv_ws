@@ -2,7 +2,7 @@
 
 Modular [ROS 2 Humble](https://docs.ros.org/en/humble/) workspace for the **Marv** autonomous underwater vehicle (AUV). The stack is split into vision, high-level control, and ArduSub hardware interface packages so each subsystem can be developed and tested independently.
 
-**Operating guide:** [INSTRUCTIONS.md](INSTRUCTIONS.md) — ARK FPV USB setup, MAVROS checks, control loop procedures (bench and in-water).
+**Operating guide:** [INSTRUCTIONS.md](INSTRUCTIONS.md) — bench + MAVROS procedures · [PREQUAL.md](PREQUAL.md) — RoboSub pre-qualification prep
 
 ## Prerequisites
 
@@ -52,7 +52,7 @@ A previous workspace may live at `~/ros2_ws_archive` if you migrated from an old
 
 - **Nodes:** `f_cam_node`, `d_cam_node`
 - **Library:** `marv_vision/lib/` — camera pipelines, coordinates, VSLAM, string formatting, YOLO inference
-- **Weights:** `marv_vision/weights/front_model.pt` + `front_model_data.yaml` (14-class RoboSub model)
+- **Weights:** `front_model.pt` (14-class YOLO) · Pre-qual uses **OpenCV** (`vision_profile:=prequal_cv`) — [VISION_PREQUAL.md](VISION_PREQUAL.md)
 - **Down camera:** `down_model.pt` still a placeholder until trained
 
 ### marv_control
@@ -160,6 +160,31 @@ ros2 launch marv_bringup marv_bringup.launch.py use_front_cam:=true use_down_cam
 
 # Unity simulation (HITL — isolated from bench defaults)
 ros2 launch marv_bringup sim_bringup.launch.py
+
+# Pre-qualification (RoboSub)
+ros2 launch marv_bringup prequal_bringup.launch.py enable_control:=true command_backend:=mavros_rc
+```
+
+See **[PREQUAL.md](PREQUAL.md)** for course layout, checklist, and tuning.
+
+### Mission planner
+
+Inspired by [Inspiration Robotics robosub_2026](https://github.com/InspirationRobotics/robosub_2026): mission classes with `step`/`cleanup`, YAML mission graphs, and per-vehicle config.
+
+| Path | Purpose |
+|------|---------|
+| `marv_control/missions/` | Mission class library (`traverse_gate`, `detect_path`, …) |
+| `marv_bringup/config/marv.yaml` | Vehicle + behavior tuning |
+| `marv_bringup/config/plans/*.yaml` | Mission sequence graphs |
+| `scripts/tmux_marv.bash` | tmux layout for bench / sim / competition |
+
+```bash
+# Planner only (master_control in planner_mode)
+ros2 launch marv_bringup mission_planner.launch.py enable_control:=true
+
+# Custom plan
+ros2 launch marv_bringup competition_bringup.launch.py \
+  plan_file:=$(ros2 pkg prefix marv_bringup)/share/marv_bringup/config/plans/bench_plan.yaml
 ```
 
 ### Individual nodes (manual)
@@ -179,6 +204,7 @@ ros2 run marv_vision d_cam_node
 | `d_cam/detections` | `std_msgs/String` | `d_cam_node` | — |
 | `cmd_vel` | `geometry_msgs/Twist` | `master_control_node` | `ardusub_node` → MAVROS |
 | `/sensors/pose` | `geometry_msgs/PoseWithCovarianceStamped` | **`pos_est`** | `master_control_node` |
+| `/sensors/range_forward` | `sensor_msgs/Range` | `ardusub_node` | `master_control_node` |
 | `/sensors/velocity` | `geometry_msgs/TwistWithCovarianceStamped` | **`pos_est`** | — |
 
 Raw sensors (IMU, pressure, cameras, battery) are **not** in `pos_est`. Add them via `sensor_io` or dedicated driver nodes when needed.

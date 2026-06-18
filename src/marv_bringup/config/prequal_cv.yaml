@@ -1,0 +1,20 @@
+# OpenCV HSV tuning for pre-qual (black gate + yellow pole).
+# Tune in the pool; see VISION_PREQUAL.md
+
+prequal_cv:
+  # Yellow pole (HSV, OpenCV scale H: 0-180)
+  yellow_h_low: 18
+  yellow_h_high: 42
+  yellow_s_min: 80
+  yellow_v_min: 80
+  yellow_min_height_frac: 0.12   # min bbox height vs image height
+  yellow_min_aspect: 1.4        # height / width
+
+  # Black gate (dark wide region in lower frame)
+  gate_v_max: 70                 # max V channel for "dark"
+  gate_s_max: 120
+  gate_min_width_frac: 0.20      # min bbox width vs image width
+  gate_max_height_frac: 0.45     # gate should be wider than tall
+  gate_roi_top_frac: 0.15        # ignore top 15% (surface glare)
+
+  min_confidence: 0.30
