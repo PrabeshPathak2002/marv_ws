@@ -41,6 +41,7 @@ class MasterControlNode(Node):
     self.declare_parameter('active_behavior', 'depth_hold')
     self.declare_parameter('config_file', '')
     self.declare_parameter('planner_mode', False)
+    self.declare_parameter('pose_topic', TOPIC_POSE)
 
     self._config = load_marv_config(self.get_parameter('config_file').value)
     self._ping_cfg = ping_config(self._config)
@@ -54,8 +55,9 @@ class MasterControlNode(Node):
     self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
     self.mission_event_pub = self.create_publisher(String, TOPIC_MISSION_EVENT, 10)
     self.create_subscription(String, 'f_cam/detections', self.vision_callback, 10)
+    pose_topic = self.get_parameter('pose_topic').value
     self.create_subscription(
-        PoseWithCovarianceStamped, TOPIC_POSE, self.pose_callback, 10)
+        PoseWithCovarianceStamped, pose_topic, self.pose_callback, 10)
     self.create_subscription(
         String, TOPIC_SET_BEHAVIOR, self.set_behavior_callback, 10)
     self.create_subscription(Range, TOPIC_RANGE_FORWARD, self.range_callback, 10)
@@ -77,7 +79,8 @@ class MasterControlNode(Node):
     self._activate_behavior(self.get_parameter('active_behavior').value)
 
     self.get_logger().info(
-        'Master control started. enable_control=false by default (bench safe).')
+        f'Master control started (pose_topic={pose_topic}). '
+        'enable_control=false by default (bench safe).')
 
   def vision_callback(self, msg: String):
     self.vision_data = msg.data

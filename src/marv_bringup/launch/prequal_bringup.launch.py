@@ -5,7 +5,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 
@@ -27,13 +27,14 @@ def generate_launch_description():
     target_depth_m = LaunchConfiguration('target_depth_m')
     use_sim = LaunchConfiguration('use_sim')
     use_ping_driver = LaunchConfiguration('use_ping_driver')
+    use_mapping = LaunchConfiguration('use_mapping')
     camera_device = LaunchConfiguration('camera_device')
 
     return LaunchDescription([
         DeclareLaunchArgument('use_mavros', default_value='true'),
         DeclareLaunchArgument(
             'fcu_url',
-            default_value='serial:///dev/ttyACM0:115200',
+            default_value='auto',
         ),
         DeclareLaunchArgument('use_ardusub', default_value='true'),
         DeclareLaunchArgument('use_vision', default_value='true'),
@@ -50,13 +51,18 @@ def generate_launch_description():
         DeclareLaunchArgument('use_ping_driver', default_value='false'),
         DeclareLaunchArgument(
             'camera_device',
-            default_value='/dev/video0',
-            description='exploreHD V4L2 MJPEG device for f_cam_node.',
+            default_value='/dev/video2',
+            description='exploreHD V4L2 MJPEG device (first node in exploreHD group).',
         ),
         DeclareLaunchArgument(
             'ping_device',
-            default_value='/dev/ttyUSB0',
-            description='Ping1D USB serial port (when use_ping_driver:=true).',
+            default_value='auto',
+            description='Ping1D path: auto resolves /dev/serial/by-id FTDI device.',
+        ),
+        DeclareLaunchArgument(
+            'use_mapping',
+            default_value='true',
+            description='Start mapping_node; missions use /sensors/map_pose.',
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
@@ -93,12 +99,31 @@ def generate_launch_description():
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
+                os.path.join(launch_dir, 'mapping.launch.py')),
+            condition=IfCondition(use_mapping),
+        ),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
                 os.path.join(launch_dir, 'mission_planner.launch.py')),
             launch_arguments={
                 'config_file': config_file,
                 'plan_file': plan_file,
                 'enable_control': enable_control,
                 'target_depth_m': target_depth_m,
+                'pose_topic': '/sensors/map_pose',
             }.items(),
+            condition=IfCondition(use_mapping),
+        ),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(launch_dir, 'mission_planner.launch.py')),
+            launch_arguments={
+                'config_file': config_file,
+                'plan_file': plan_file,
+                'enable_control': enable_control,
+                'target_depth_m': target_depth_m,
+                'pose_topic': '/sensors/pose',
+            }.items(),
+            condition=UnlessCondition(use_mapping),
         ),
     ])

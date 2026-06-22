@@ -1,20 +1,18 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>marv_bringup</name>
+  <name>marv_mapping</name>
   <version>0.0.0</version>
-  <description>Launch files for the Marv AUV ROS 2 stack</description>
+  <description>Landmark mapping and dead-reckoning fusion for Marv AUV (vendored auv_mapping).</description>
   <maintainer email="dragontomb35782@gmail.com">eagleauv</maintainer>
   <license>MIT</license>
 
-  <exec_depend>launch</exec_depend>
-  <exec_depend>launch_ros</exec_depend>
-  <exec_depend>mavros</exec_depend>
-  <exec_depend>ros_tcp_endpoint</exec_depend>
-  <depend>marv_ardusub</depend>
-  <depend>marv_control</depend>
-  <depend>marv_vision</depend>
-  <depend>marv_mapping</depend>
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>marv_vision</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

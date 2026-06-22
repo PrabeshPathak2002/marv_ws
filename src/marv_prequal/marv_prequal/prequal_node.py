@@ -57,11 +57,11 @@ class PrequalNode(Node):
         self.declare_parameter('max_sprint_time', 20.0)
         self.declare_parameter('orbit_radius', 1.0)
         self.declare_parameter('crash_distance', 0.5)
-        self.declare_parameter('ping_topic', '/bluerobotics/ping/distance')
+        self.declare_parameter('ping_topic', '/ping1d/range')
         self.declare_parameter(
             'ping_message_type',
-            'float32',
-            description='Ping topic type: float32 or range',
+            'range',
+            description='Ping topic type: range, float32, or auto (both /ping1d/range + /ping1d/data)',
         )
 
         self._target_depth = float(self.get_parameter('target_depth').value)
@@ -83,6 +83,7 @@ class PrequalNode(Node):
         self.current_depth = 0.0
         self.current_yaw = 0.0
         self.ping_distance = float('inf')
+        self.ping_valid = False
         self.initial_yaw = 0.0
 
         self._blow_through_start = None
@@ -97,18 +98,51 @@ class PrequalNode(Node):
         self.create_subscription(Image, '/explore_hd/image_raw', self.front_cam_callback, 10)
         self.create_subscription(Imu, '/ark/imu/data', self.imu_callback, 10)
         self.create_subscription(Float32, '/bluerobotics/bar02/depth', self.depth_callback, 10)
-
-        if ping_msg_type == 'range':
-            self.create_subscription(Range, ping_topic, self.ping_range_callback, 10)
-        else:
-            self.create_subscription(Float32, ping_topic, self.ping_float_callback, 10)
+        self._setup_ping_subscriptions(ping_topic, ping_msg_type)
 
         self.create_timer(0.05, self.control_loop)
+        self.create_timer(5.0, self._ping_health_check)
 
         self.get_logger().info(
             f'prequal_node started — state={self._state.name}, '
             f'target_depth={self._target_depth}, orbit_radius={self._orbit_radius}, '
-            f'crash_distance={self._crash_distance}, ping={ping_topic} ({ping_msg_type})')
+            f'crash_distance={self._crash_distance}, ping_mode={ping_msg_type}')
+
+    def _setup_ping_subscriptions(self, ping_topic, ping_msg_type):
+        """Wire Ping subscriptions to match ping_sonar_ros driver output."""
+        if ping_msg_type == 'auto':
+            self.create_subscription(Range, '/ping1d/range', self.ping_range_callback, 10)
+            self.create_subscription(Float32, '/ping1d/data', self.ping_float_callback, 10)
+            self.get_logger().info(
+                'ping subscriptions: /ping1d/range (sensor_msgs/Range) '
+                'and /ping1d/data (std_msgs/Float32)')
+            return
+
+        if ping_msg_type == 'range':
+            self.create_subscription(Range, ping_topic, self.ping_range_callback, 10)
+            self.get_logger().info(f'ping subscription: {ping_topic} (sensor_msgs/Range)')
+            return
+
+        self.create_subscription(Float32, ping_topic, self.ping_float_callback, 10)
+        self.get_logger().info(f'ping subscription: {ping_topic} (std_msgs/Float32)')
+
+    def _update_ping_distance(self, range_m, min_range=None, max_range=None):
+        if range_m is None or not math.isfinite(range_m) or range_m <= 0.0:
+            return
+        if min_range is not None and range_m < min_range:
+            return
+        if max_range is not None and range_m > max_range:
+            return
+        self.ping_distance = float(range_m)
+        self.ping_valid = True
+
+    def _ping_health_check(self):
+        if not self.ping_valid:
+            self.get_logger().warn(
+                'No valid Ping range received yet — expected /ping1d/range '
+                '(sensor_msgs/Range) from ping_sonar_ros; start with: '
+                'ros2 launch marv_bringup ping.launch.py',
+                throttle_duration_sec=10.0)
 
     def imu_callback(self, msg: Imu):
         q = msg.orientation
@@ -118,11 +152,14 @@ class PrequalNode(Node):
         self.current_depth = float(msg.data)
 
     def ping_float_callback(self, msg: Float32):
-        self.ping_distance = float(msg.data)
+        self._update_ping_distance(float(msg.data))
 
     def ping_range_callback(self, msg: Range):
-        if math.isfinite(msg.range) and msg.range >= 0.0:
-            self.ping_distance = float(msg.range)
+        self._update_ping_distance(
+            float(msg.range),
+            min_range=float(msg.min_range),
+            max_range=float(msg.max_range),
+        )
 
     def _roi_slice(self, frame):
         h = frame.shape[0]
@@ -226,6 +263,8 @@ class PrequalNode(Node):
     def _check_ping_failsafe(self):
         if self._state in (PrequalState.ORBIT_MARKER, PrequalState.SURFACE):
             return False
+        if not self.ping_valid:
+            return False
         if self.ping_distance >= self._crash_distance:
             return False
         self.get_logger().error(
@@ -279,7 +318,7 @@ class PrequalNode(Node):
         elif self._state == PrequalState.APPROACH_MARKER:
             twist.linear.x = 0.3
             twist.angular.z = -self.marker_x_error * 0.002
-            if self.ping_distance <= self._orbit_radius:
+            if self.ping_valid and self.ping_distance <= self._orbit_radius:
                 self.initial_yaw = self.current_yaw
                 self._orbit_yaw_accum = 0.0
                 self._orbit_prev_yaw = self.current_yaw

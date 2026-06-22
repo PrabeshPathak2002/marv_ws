@@ -1,15 +1,13 @@
-# ArduPilot plugin list + Marv workarounds (MAVROS 2.14 companion plugin crash).
+# Minimal MAVROS plugins for Marv ArduSub pre-qual (avoids plugin/service collisions).
 /**:
   ros__parameters:
-    plugin_denylist:
-      - actuator_control
-      - ftp
-      - hil
-      - altitude
-      - debug_value
-      - image_pub
-      - px4flow
-      - vibration
-      - vision_speed_estimate
-      - wheel_odometry
-      - companion_process_status
+    plugin_allowlist:
+      - sys_status
+      - sys_time
+      - imu
+      - local_position
+      - rc_io
+      - setpoint_velocity
+      - command
+      - param
+      - distance_sensor

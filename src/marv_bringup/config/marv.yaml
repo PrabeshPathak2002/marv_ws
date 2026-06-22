@@ -3,7 +3,8 @@
 
 vehicle:
   name: marv
-  fcu_url: serial:///dev/ttyACM0:115200
+  # auto = resolved at launch from /dev/serial/by-id (usb-ArduPilot_ARK_FPV*-if00)
+  fcu_url: auto
 
 control:
   target_depth_m: 1.0
@@ -20,10 +21,10 @@ camera_front:
   height: 720
   fps: 30
 
-# Blue Robotics Ping1D — USB serial on Jetson (/dev/ttyUSB*).
+# Blue Robotics Ping1D — direct USB serial via /dev/serial/by-id (FTDI).
 ping:
-  connection: usb
-  port: /dev/ttyUSB0
+  connection: serial
+  port: auto
   baudrate: 115200
   driver_topic: /ping1d/range
   obstacle_stop_m: 0.8
@@ -75,7 +76,7 @@ behaviors:
     max_transit_s: 20.0
     marker_classes: [yellow_pole]
     conf_min: 0.25
-    use_timed_transit: true
+    use_timed_transit: false  # pose-based 10 m transit when mapping_node publishes /sensors/map_pose
   find_marker:
     marker_classes: [yellow_pole]
     conf_min: 0.25

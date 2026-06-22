@@ -6,7 +6,7 @@
 
 camera_front:
   model: exploreHD
-  device: /dev/video0
+  device: /dev/video2
   fourcc: MJPG
   width: 1280
   height: 720

@@ -57,15 +57,33 @@ class Ping1dComponent(Node):
     self.scan_lenght_:float = self.get_parameter('scan_lenght').value
     self.declare_parameter('mode_auto', 0) # default 0: manual mode, 1: auto mode
     self.mode_auto_:int = self.get_parameter('mode_auto').value
-    self.declare_parameter('port', '/dev/ttyUSB0')
-    self.port:str = self.get_parameter('port').value
+    self.declare_parameter('connection', 'serial')  # serial | udp (udp only if a proxy holds the port)
+    self.declare_parameter('port', 'auto')
+    self.declare_parameter('udp_host', '127.0.0.1')
+    self.declare_parameter('udp_port', 9090)
+
+    from ping_sonar_ros.serial_devices import resolve_ping_device
+
+    connection = str(self.get_parameter('connection').value).lower()
+    port = self.get_parameter('port').value
+    udp_host = self.get_parameter('udp_host').value
+    udp_port = int(self.get_parameter('udp_port').value)
+    if port in ('auto', ''):
+      port = resolve_ping_device()
+    self.port = port
+    self._connection = connection
 
     self.param_handler_ptr_ = self.add_on_set_parameters_callback(self.set_param_callback)
 
     ### Make a new Ping
     self.baudrate = 115200
     self.ping = module.Ping1D()
-    self.ping.connect_serial(self.port, self.baudrate)
+    if connection == 'udp':
+      self.get_logger().info(f'Ping1D via UDP proxy {udp_host}:{udp_port}')
+      self.ping.connect_udp(udp_host, udp_port)
+    else:
+      self.get_logger().info(f'Ping1D via serial: {port}')
+      self.ping.connect_serial(port, self.baudrate)
 
     if self.ping.initialize() is False:
       print("Failed to initialize Ping!")

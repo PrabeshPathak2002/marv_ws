@@ -11,8 +11,8 @@ from marv_ardusub.lib.ping_io import read_forward_range
 
 GRAVITY_M_PER_S2 = 9.80665
 
-# MAVROS serial link to ARK FPV (ArduSub) over USB
-DEFAULT_FCU_URL = 'serial:///dev/ttyACM0:115200'
+# MAVROS serial link to ARK FPV (ArduSub) over USB — resolved via /dev/serial/by-id at launch.
+DEFAULT_FCU_URL = 'auto'
 
 TOPIC_IMU = '/mavros/imu/data'
 TOPIC_ODOM = '/mavros/local_position/odom'
