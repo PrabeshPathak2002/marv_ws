@@ -8,7 +8,7 @@ from sensor_msgs.msg import Range
 
 TOPIC_RANGE_FORWARD = '/sensors/range_forward'
 DEFAULT_PING_TOPIC = '/ping1d/range'
-MAVROS_RANGEFINDER_TOPIC = '/mavros/rangefinder/rangefinder'
+MAVROS_RANGEFINDER_TOPIC = '/mavros/distance_sensor/lidar'
 
 
 def setup_range_subscription(node):

@@ -15,7 +15,7 @@ class ApproachMarkerMission(Mission):
   def __init__(self, node, **config):
     super().__init__(node, **config)
     self._marker_classes = tuple(
-        config.get('marker_classes', ('yellow_pole', 'circle', 'Circle', 'cross')))
+        config.get('marker_classes', ('obstacle', 'yellow_pole', 'circle', 'Circle', 'cross')))
     self._conf_min = float(config.get('conf_min', 0.25))
     self._center_deadband = float(config.get('center_deadband', 0.12))
     self._close_area = float(config.get('close_area', 0.055))

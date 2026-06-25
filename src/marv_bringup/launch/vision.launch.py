@@ -21,6 +21,7 @@ def generate_launch_description():
     fourcc = LaunchConfiguration('fourcc')
     sim_image_topic = LaunchConfiguration('sim_image_topic')
     publish_debug_image = LaunchConfiguration('publish_debug_image')
+    show_debug_window = LaunchConfiguration('show_debug_window')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -41,7 +42,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'vision_profile',
             default_value='default',
-            description='default | prequal (YOLO) | prequal_cv (OpenCV HSV/lines).',
+            description='default | prequal (YOLO) | prequal_cv (OpenCV HSV/lines) | prequal_hybrid (both).',
         ),
         DeclareLaunchArgument(
             'f_cam_conf_threshold',
@@ -55,8 +56,8 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'camera_device',
-            default_value='/dev/video0',
-            description='exploreHD V4L2 MJPEG device (first /dev/video* in group).',
+            default_value='/dev/explore_hd',
+            description='exploreHD V4L2 MJPEG device (/dev/explore_hd after udev setup).',
         ),
         DeclareLaunchArgument(
             'image_width',
@@ -88,6 +89,11 @@ def generate_launch_description():
             default_value='false',
             description='Publish annotated front camera on /f_cam/image_annotated.',
         ),
+        DeclareLaunchArgument(
+            'show_debug_window',
+            default_value='false',
+            description='Open local OpenCV window with detection overlays.',
+        ),
         Node(
             package='marv_vision',
             executable='f_cam_node',
@@ -105,6 +111,7 @@ def generate_launch_description():
                 'frame_fps': frame_fps,
                 'fourcc': fourcc,
                 'publish_debug_image': publish_debug_image,
+                'show_debug_window': show_debug_window,
             }],
             condition=IfCondition(use_front_cam),
         ),

@@ -22,7 +22,7 @@ class ArdusubNode(Node):
   def __init__(self):
     super().__init__('ardusub_node')
     self.declare_parameter('use_ping', True)
-    self.declare_parameter('ping_range_topic', '/ping1d/range')
+    self.declare_parameter('ping_range_topic', '/mavros/distance_sensor/lidar')
     self.declare_parameter('publish_pose', True)
 
     setup_position_publishers(self)
@@ -37,6 +37,7 @@ class ArdusubNode(Node):
       setup_range_publisher(self)
       setup_range_subscription(self)
 
+    self._last_cmd_vel = Twist()
     self.create_subscription(Twist, 'cmd_vel', self.cmd_vel_callback, 10)
     self.timer = self.create_timer(0.1, self.timer_callback)
     self.target_depth = 1.0
@@ -45,10 +46,11 @@ class ArdusubNode(Node):
     self.get_logger().info(f'ArduSub node started (forward Ping: {ping_status})')
 
   def cmd_vel_callback(self, msg: Twist):
-    maintain_depth(self, self.target_depth, current_depth_m=self._last_depth_m)
-    forward_cmd_vel(self, msg)
+    self._last_cmd_vel = msg
 
   def timer_callback(self):
+    maintain_depth(self, self.target_depth, current_depth_m=self._last_depth_m)
+    forward_cmd_vel(self, self._last_cmd_vel)
     if self.get_parameter('use_ping').value:
       from marv_ardusub.lib.ping_io import publish_forward_range
       publish_forward_range(self)

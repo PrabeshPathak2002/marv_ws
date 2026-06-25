@@ -1,4 +1,6 @@
 # Minimal MAVROS plugins for Marv ArduSub pre-qual (avoids plugin/service collisions).
+# Do NOT add param — it fights QGC parameter download over MAVProxy.
+# command is required for /mavros/cmd/arming on bench (arm_vehicle.sh).
 /**:
   ros__parameters:
     plugin_allowlist:
@@ -9,5 +11,3 @@
       - rc_io
       - setpoint_velocity
       - command
-      - param
-      - distance_sensor

@@ -1,0 +1,3 @@
+[submodule "src/bb_worlds"]
+	path = src/bb_worlds
+	url = https://github.com/BumblebeeAS/bb_worlds.git

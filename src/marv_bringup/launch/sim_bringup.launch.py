@@ -25,7 +25,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             'fcu_url',
-            default_value='serial:///dev/ttyACM0:115200',
+            default_value='udp://@127.0.0.1:14555',
             description='MAVROS serial URL for ARK FPV over USB.',
         ),
         DeclareLaunchArgument(

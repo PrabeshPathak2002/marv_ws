@@ -17,7 +17,7 @@ echo "  MJPEG (OpenCV): usually first in group, e.g. /dev/video0"
 echo "  H.264 stream:   usually third, e.g. /dev/video2"
 echo "Marv f_cam_node defaults to /dev/video0 @ 1280x720 MJPG."
 
-DEVICE="${1:-/dev/video0}"
+DEVICE="${1:-/dev/explore_hd}"
 echo ""
 echo "=== Test capture on ${DEVICE} ==="
 if command -v gst-launch-1.0 >/dev/null 2>&1 && [[ -e "${DEVICE}" ]]; then

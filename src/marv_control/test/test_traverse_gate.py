@@ -20,8 +20,8 @@ class _FakeNode:
 
 def test_traverse_gate_returns_cmd_for_gate_detection():
   node = _FakeNode()
-  vision = 'black_gate:0.90,x:0.60,y:0.50,area:0.05'
-  cmd = traverse_gate(node, vision, gate_classes=('black_gate', 'gate'))
+  vision = 'gate:0.90,x:0.60,y:0.50,area:0.05'
+  cmd = traverse_gate(node, vision, gate_classes=('gate',))
   assert cmd is not None
   assert cmd['surge'] > 0
 

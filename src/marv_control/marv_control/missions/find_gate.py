@@ -12,7 +12,7 @@ class FindGateMission(Mission):
 
   def __init__(self, node, **config):
     super().__init__(node, **config)
-    self._gate_classes = tuple(config.get('gate_classes', ('gate', 'black_gate')))
+    self._gate_classes = tuple(config.get('gate_classes', ('gate',)))
     self._conf_min = float(config.get('conf_min', 0.20))
     self._search_yaw = float(config.get('search_yaw', 0.12))
     self._forward_surge = float(config.get('forward_surge', 0.0))

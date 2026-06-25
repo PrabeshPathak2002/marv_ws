@@ -48,27 +48,99 @@ sudo apt install ros-humble-mavros ros-humble-mavros-extras
 | Item | Detail |
 |------|--------|
 | Flight controller | ARK FPV running **ArduSub** |
+| Vehicle frame | **VECTORED_6DOF** (8 thrusters — ArduSub mixer maps body-frame commands to all motors) |
 | Link to Jetson | **USB** cable |
-| Typical device | `/dev/ttyACM0` (sometimes also `ttyACM1`) |
-| MAVROS URL | `serial:///dev/ttyACM0:115200` |
+| Stable paths (recommended) | `/dev/ark_fpv`, `/dev/ping_sonar`, `/dev/explore_hd` via udev |
+| MAVROS URL | `udp://@127.0.0.1:14555` (via MAVProxy — not direct serial) |
 
 **Verify USB:**
 
 ```bash
-lsusb | grep -i ark
-ls -l /dev/ttyACM*
+lsusb | grep -iE 'ark|ftdi|explore|microdia'
+ls -l /dev/ark_fpv /dev/ping_sonar /dev/explore_hd 2>/dev/null || true
 ```
 
-Expected: `Generic ARK_FPV` and `crw-rw---- ... ttyACM0`.
+### 2.1 Stable device paths (fix USB reordering)
+
+Linux may assign `/dev/ttyUSB*`, `/dev/ttyACM*`, and `/dev/video*` in a different order after each reboot. Install udev symlinks once:
+
+```bash
+cd ~/marv_ws
+# Edit idVendor/idProduct in the script if lsusb / v4l2-ctl differ on your bench
+nano setup_hardware_rules.sh
+sudo ./setup_hardware_rules.sh
+# Unplug/replug USB (or reboot), then:
+ls -l /dev/ping_sonar /dev/explore_hd /dev/ark_fpv
+```
+
+| Symlink | Peripheral | Used by |
+|---------|------------|---------|
+| `/dev/ping_sonar` | Ping1D (FTDI serial) | `ping1d_node` |
+| `/dev/explore_hd` | exploreHD MJPEG camera | `f_cam_node` |
+| `/dev/ark_fpv` | ARK FPV MAVLink (if00) | **MAVProxy** `--master` (not MAVROS directly) |
+
+Find IDs: `lsusb` (serial devices), `v4l2-ctl --list-devices` + `udevadm info -a -n /dev/video0` (camera).
+
+### 2.2 MAVProxy telemetry bridge (MAVROS + QGroundControl together)
+
+MAVROS must **not** open the FCU USB serial port when QGC is also in use. **MAVProxy** owns the serial link and fans out UDP streams:
+
+```
+ARK FPV (USB serial /dev/ark_fpv)
+        ↓
+   MAVProxy (Jetson)  --udp:127.0.0.1:14555-->  MAVROS (pre-qual stack)
+        ↓
+   --udpbcast:<subnet>.255:14550-->  QGroundControl (laptop)
+```
+
+**MAVProxy (default):**
+
+```bash
+chmod +x ~/marv_ws/start_telemetry_bridge.sh
+# USB tether example:
+QGC_UDP_BCAST=192.168.137.255 ~/marv_ws/start_telemetry_bridge.sh
+# Wi-Fi example (edit subnet in script or env):
+~/marv_ws/start_telemetry_bridge.sh
+```
+
+If QGC is stuck on **"Waiting for parameters"**, in the MAVProxy terminal type `param fetch` and press Enter. Stop ROS first: `pkill -f prequal_bringup.launch.py`.
+
+**mavlink-router (lighter alternative, recommended if params keep failing):**
+
+```bash
+sudo apt install mavlink-router
+chmod +x ~/marv_ws/start_mavlink_router.sh
+~/marv_ws/start_mavlink_router.sh
+# QGC: UDP to <jetson-ip>:14550
+```
+
+**Startup order:**
+
+1. Start `start_telemetry_bridge.sh` or `start_mavlink_router.sh` (keep terminal open)
+2. QGC connect UDP port **14550** — wait until parameters finish loading
+3. Launch ROS: `~/marv_ws/scripts/run_prequal.sh`
+
+| Setting | Value |
+|---------|--------|
+| MAVProxy → MAVROS | `udp:127.0.0.1:14555` |
+| MAVROS `fcu_url` | `udp://@127.0.0.1:14555` (default in launch files) |
+| MAVProxy → QGC | `udpbcast:<subnet>.255:14550` (default `192.168.1.255`) |
+| MAVProxy `--streamrate` | `10` Hz |
+| MAVProxy `--master` | `/dev/ark_fpv` (or `/dev/ttyACM0` before udev) |
+
+Do **not** connect QGC to the FCU over USB on the laptop while MAVProxy is using the Jetson USB port. Do **not** launch MAVROS with `serial://...` unless MAVProxy is stopped.
+
+Direct serial (no MAVProxy) is still possible for bench-only testing:
+`fcu_url:=serial:///dev/ark_fpv:115200` — but then QGC cannot share the link.
 
 ---
 
 ## 3. Software architecture (what runs where)
 
 ```
-ARK FPV (USB/MAVLink)
-        ↓
-     MAVROS
+ARK FPV (USB) --> MAVProxy --> udp:127.0.0.1:14555 --> MAVROS
+                                    |
+                                    +--> udpbcast:<subnet>.255:14550 --> QGC
         ↓
   sensor_io (read)  →  pos_est (fuse)  →  /sensors/pose
                                               ↓
@@ -93,10 +165,10 @@ ARK FPV (USB/MAVLink)
 
 ## 4.1 Blue Robotics Ping1D (USB on Jetson)
 
-The front **Ping1D** plugs into the Jetson over **USB** (shows up as `/dev/ttyUSB0` or similar — not the ARK FPV `/dev/ttyACM*` ports). The driver is already in this workspace at `src/ping_sonar_ros`.
+The front **Ping1D** plugs into the Jetson over **USB** serial. After udev setup it is always **`/dev/ping_sonar`** (not a shifting `ttyUSB*` index).
 
 ```
-Ping1D --USB--> Jetson (/dev/ttyUSB0) --> ping1d_node --> /ping1d/range
+Ping1D --USB--> Jetson (/dev/ping_sonar) --> ping1d_node --> /ping1d/range
                                                       --> /sensors/range_forward
 ```
 
@@ -129,15 +201,15 @@ dmesg | tail -15
 ls -l /dev/ttyUSB*
 ```
 
-Use the port shown (often `/dev/ttyUSB0` when only the Ping is on USB serial).
+Use `/dev/ping_sonar` after udev setup, or `scripts/resolve_serial_devices.sh` for the current path.
 
 ### Verify range
 
 ```bash
 source ~/marv_ws/install/setup.bash
 
-# Ping driver only (set port after ls above)
-ros2 launch marv_bringup ping.launch.py ping_device:=/dev/ttyUSB0
+# Ping driver only (default port /dev/ping_sonar)
+ros2 launch marv_bringup ping.launch.py
 
 # Other terminal — expect range in meters
 ros2 topic echo /ping1d/range
@@ -145,13 +217,13 @@ ros2 topic echo /ping1d/range
 
 ### Full stack (Ping + ARK FPV)
 
-ARK FPV stays on `/dev/ttyACM0`; Ping stays on `/dev/ttyUSB0` — two separate USB devices.
+ARK FPV: `/dev/ark_fpv` | Ping: `/dev/ping_sonar` — separate USB devices.
 
 ```bash
 ros2 launch marv_bringup marv_bringup.launch.py \
   use_ping_driver:=true \
-  ping_device:=/dev/ttyUSB0 \
-  fcu_url:=serial:///dev/ttyACM0:115200
+  ping_device:=/dev/ping_sonar \
+  fcu_url:=udp://@127.0.0.1:14555
 
 ros2 topic echo /sensors/range_forward
 ```
@@ -175,12 +247,12 @@ Tune thresholds in `src/marv_bringup/config/marv.yaml` under `ping:` and `behavi
 The front **exploreHD** (DeepWater Exploration) plugs into the Jetson over **USB** as a UVC camera (`/dev/video*`). It is separate from the Ping (`/dev/ttyUSB*`) and ARK FPV (`/dev/ttyACM*`).
 
 ```
-exploreHD --USB--> Jetson (/dev/video0) --> f_cam_node --> /f_cam/detections
+exploreHD --USB--> Jetson (/dev/explore_hd) --> f_cam_node --> /f_cam/detections
 ```
 
 | Setting | Default | Notes |
 |---------|---------|--------|
-| `camera_device` | `/dev/video0` | MJPEG node (first in exploreHD group) |
+| `camera_device` | `/dev/explore_hd` | MJPEG node (udev symlink) |
 | Resolution | 1280×720 @ 30 fps | MJPEG (`fourcc:=MJPG`) |
 | H.264 node | `/dev/video2` (typical) | Not used by OpenCV path |
 
@@ -207,7 +279,7 @@ source ~/marv_ws/install/setup.bash
 # OpenCV pre-qual vision (default exploreHD device)
 ros2 run marv_vision f_cam_node --ros-args \
   -p vision_profile:=prequal_cv \
-  -p camera_device:=/dev/video0
+  -p camera_device:=/dev/explore_hd
 
 ros2 topic echo /f_cam/detections
 ```
@@ -216,7 +288,7 @@ Override device or resolution if needed:
 
 ```bash
 ros2 run marv_vision f_cam_node --ros-args \
-  -p camera_device:=/dev/video0 \
+  -p camera_device:=/dev/explore_hd \
   -p image_width:=1280 \
   -p image_height:=720 \
   -p fourcc:=MJPG
@@ -228,8 +300,8 @@ ros2 run marv_vision f_cam_node --ros-args \
 ros2 launch marv_bringup prequal_bringup.launch.py \
   enable_control:=false \
   use_ping_driver:=true \
-  ping_device:=/dev/ttyUSB0 \
-  camera_device:=/dev/video0
+  ping_device:=/dev/ping_sonar \
+  camera_device:=/dev/explore_hd
 ```
 
 (`camera_device` is passed through `vision.launch.py`.)
@@ -246,7 +318,7 @@ Use this when the ARK FPV is plugged in and you want to confirm the link before 
 source ~/marv_ws/install/setup.bash
 ros2 launch marv_bringup mavros.launch.py
 # Or manually:
-# ros2 run mavros mavros_node --ros-args -p fcu_url:=serial:///dev/ttyACM0:115200
+# ros2 run mavros mavros_node --ros-args -p fcu_url:=udp://@127.0.0.1:14555
 ```
 
 **Terminal 2 — check topics:**
@@ -345,7 +417,22 @@ ros2 launch marv_bringup marv_bringup.launch.py \
 - [ ] Start with small `target_depth_m` and low `depth_kp`
 - [ ] Spotter / operator ready
 
-**Launch with RC override backend** (matches ArduSub + QGC setups):
+**Launch with RC override backend** (matches ArduSub + QGC setups on **VECTORED_6DOF** / 8-thruster Marv):
+
+Marv sends body-frame **surge / sway / yaw / heave** via MAVROS RC channels 4–5 / 3 / 2 (or `setpoint_velocity`). ArduSub’s vectored mixer drives all **8 thrusters** — you do not address individual motors from `marv_ws`.
+
+```bash
+ros2 launch marv_bringup marv_bringup.launch.py \
+  use_vision:=false \
+  enable_control:=true \
+  command_backend:=mavros_rc \
+  hold_depth_with_autopilot:=true \
+  target_depth_m:=1.0
+```
+
+Use `hold_depth_with_autopilot:=true` when ArduPilot **ALT_HOLD** holds depth (recommended for vectored subs); disable master-control heave in the mission planner launch if both fight vertical control.
+
+**Alternative launch** (without the hold_depth flag above):
 
 ```bash
 ros2 launch marv_bringup marv_bringup.launch.py \
@@ -377,7 +464,7 @@ cmd_vel -> MAVROS (mavros_rc): surge=0.00 sway=0.00 heave=0.12 yaw=0.00
 | Argument | Default | Description |
 |----------|---------|-------------|
 | `use_mavros` | `true` | Start MAVROS node |
-| `fcu_url` | `serial:///dev/ttyACM0:115200` | ARK FPV USB serial URL |
+| `fcu_url` | `udp://@127.0.0.1:14555` | MAVROS UDP (MAVProxy local stream) |
 | `use_ardusub` | `true` | Start `ardusub_node` |
 | `use_control` | `true` | Start `master_control_node` |
 | `use_vision` | `true` | Start camera nodes |
@@ -400,7 +487,8 @@ ros2 launch marv_bringup vision.launch.py
 
 | Problem | Things to try |
 |---------|----------------|
-| No `/dev/ttyACM0` | Replug USB; try `ttyACM1`; check `lsusb` |
+| No `/dev/ark_fpv` | Run `sudo ./setup_hardware_rules.sh`; replug USB; use in `start_telemetry_bridge.sh` |
+| MAVROS `VER: timeout` | Start `start_telemetry_bridge.sh` first; do not use `serial://` fcu_url with MAVProxy |
 | `connected: false` | Wrong port/baud; close QGC serial hogging the port |
 | No `/sensors/pose` | Is `ardusub_node` running? Is MAVROS up? |
 | `/cmd_vel` always zero | Set `enable_control:=true` |
@@ -453,7 +541,7 @@ Vision nodes support hardware vs Unity sim via `use_sim`:
 
 | Mode | `use_sim` | Input |
 |------|-----------|--------|
-| Hardware (default) | `false` | exploreHD USB via V4L2 (`camera_device` `/dev/video0`, MJPEG 1280×720) |
+| Hardware (default) | `false` | exploreHD USB via V4L2 (`camera_device` `/dev/explore_hd`, MJPEG 1280×720) |
 | Unity HITL | `true` | `/unity/f_cam/image_raw`, `/unity/d_cam/image_raw` |
 
 ```bash

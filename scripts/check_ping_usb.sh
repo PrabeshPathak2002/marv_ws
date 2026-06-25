@@ -25,7 +25,10 @@ echo "=== dialout group ==="
 groups | grep -q dialout && echo "OK: in dialout" || echo "WARN: add user to dialout"
 
 echo ""
-PING_DEV="$(ls /dev/serial/by-id/usb-FTDI_*-if00-port0 2>/dev/null | head -1 || echo /dev/ttyUSB0)"
+PING_DEV="/dev/ping_sonar"
+if [[ ! -e "${PING_DEV}" ]]; then
+  PING_DEV="$(ls /dev/serial/by-id/usb-FTDI_*-if00-port0 2>/dev/null | head -1 || echo /dev/ttyUSB0)"
+fi
 echo "=== Ping serial port (${PING_DEV}) ==="
 if python3 -c "import os; os.open('${PING_DEV}', os.O_RDWR|os.O_NOCTTY|os.O_NONBLOCK)" 2>/dev/null; then
   echo "Available — ready for: ros2 launch marv_bringup ping.launch.py"

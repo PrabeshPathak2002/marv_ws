@@ -55,7 +55,7 @@ def test_transit_forward_times_out_without_marker():
 def test_find_gate_completes_when_gate_visible():
   node = _FakeNode()
   mission = FindGateMission(node)
-  ctx = MissionContext(vision_data='black_gate:0.70,x:0.50,y:0.50,area:0.08')
+  ctx = MissionContext(vision_data='gate:0.70,x:0.50,y:0.50,area:0.08')
   result = mission.step(ctx)
   assert result.complete
   assert result.success

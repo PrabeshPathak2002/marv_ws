@@ -1,0 +1,27 @@
+# Mission behavior -> Gazebo world (bb_worlds assets by default)
+default:
+  approach_marker: marv_task_approach_marker
+  circle_marker: marv_task_circle_marker
+  competition: marv_competition
+  depth_hold: marv_task_depth_hold
+  detect_path: marv_task_detect_path
+  find_gate: marv_task_find_gate
+  find_marker: marv_task_find_marker
+  find_return_gate: marv_task_find_return_gate
+  hold: marv_task_hold
+  pass_gate: marv_task_pass_gate
+  pass_gate_clear: marv_task_pass_gate_clear
+  pool: marv_pool
+  prequal: marv_prequal
+  return_home: marv_task_return_home
+  transit_forward: marv_task_transit
+  traverse_gate: marv_task_traverse_gate
+  turn_around: marv_task_turn_around
+  wait_submerged: marv_task_wait_submerged
+
+simple_fallback:
+  circle_marker: marv_task_circle_marker_simple
+  find_gate: marv_task_find_gate_simple
+  pool: marv_pool_simple
+  prequal: marv_prequal_simple
+  traverse_gate: marv_task_traverse_gate_simple

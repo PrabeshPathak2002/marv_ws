@@ -1,11 +1,20 @@
-"""Forward /cmd_vel from Marv to MAVROS (ArduSub on ARK FPV)."""
+"""Forward /cmd_vel from Marv to MAVROS (ArduSub on ARK FPV).
+
+Marv is configured as VECTORED_6DOF with 8 thrusters. ROS only sends
+body-frame surge/sway/heave/yaw; ArduSub's firmware mixer maps those to
+individual motor outputs.
+"""
 
 from geometry_msgs.msg import Twist
 from mavros_msgs.msg import OverrideRCIn, State
 
-TOPIC_STATE = '/mavros/state'
-TOPIC_RC_OVERRIDE = '/mavros/rc/override'
-TOPIC_SETPOINT_VEL = '/mavros/setpoint_velocity/cmd_vel'
+from marv_bringup.mavros_topics import (
+    MAVROS_STATE_QOS,
+    TOPIC_RC_OVERRIDE,
+    TOPIC_RC_OVERRIDE_ALT,
+    TOPIC_SETPOINT_VEL,
+    TOPIC_STATE,
+)
 
 
 def setup_mavros_actuation(node):
@@ -14,7 +23,7 @@ def setup_mavros_actuation(node):
     node.declare_parameter('hold_depth_with_autopilot', False)
     node.declare_parameter('heave_pwm_invert', False)
     node.declare_parameter('rc_neutral_pwm', 1500)
-    node.declare_parameter('rc_scale_pwm', 400)
+    node.declare_parameter('rc_scale_pwm', 550)
     node.declare_parameter('rc_min_pwm', 1100)
     node.declare_parameter('rc_max_pwm', 1900)
 
@@ -34,9 +43,11 @@ def setup_mavros_actuation(node):
     def state_cb(msg: State):
         node._actuation['mavros_state'] = msg
 
-    node.create_subscription(State, TOPIC_STATE, state_cb, 10)
-    node._actuation['rc_pub'] = node.create_publisher(
-        OverrideRCIn, TOPIC_RC_OVERRIDE, 10)
+    node.create_subscription(State, TOPIC_STATE, state_cb, MAVROS_STATE_QOS)
+    node._actuation['rc_pubs'] = [
+        node.create_publisher(OverrideRCIn, TOPIC_RC_OVERRIDE, 10),
+        node.create_publisher(OverrideRCIn, TOPIC_RC_OVERRIDE_ALT, 10),
+    ]
     node._actuation['setpoint_pub'] = node.create_publisher(
         Twist, TOPIC_SETPOINT_VEL, 10)
 
@@ -66,7 +77,8 @@ def _publish_rc_override(node, surge, sway, heave, yaw):
     msg.channels[3] = _velocity_to_pwm(node, yaw)
     msg.channels[4] = _velocity_to_pwm(node, surge)
     msg.channels[5] = _velocity_to_pwm(node, sway)
-    act['rc_pub'].publish(msg)
+    for pub in act['rc_pubs']:
+        pub.publish(msg)
 
 
 def forward_cmd_vel(node, cmd: Twist):
@@ -78,6 +90,12 @@ def forward_cmd_vel(node, cmd: Twist):
         return
 
     if not act['mavros_state'].connected:
+        return
+
+    if not act['mavros_state'].armed:
+        if act['cmd_count'] == 0:
+            node.get_logger().warn(
+                'FCU disarmed — RC override not sent (arm first)')
         return
 
     surge = cmd.linear.x

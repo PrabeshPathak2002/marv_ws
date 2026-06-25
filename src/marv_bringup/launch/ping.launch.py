@@ -58,8 +58,8 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'ping_device',
-            default_value='auto',
-            description='Ping1D path: auto resolves /dev/serial/by-id FTDI device.',
+            default_value='/dev/ping_sonar',
+            description='Ping1D path: /dev/ping_sonar (udev) or auto for by-id fallback.',
         ),
         DeclareLaunchArgument(
             'ping_udp_host',

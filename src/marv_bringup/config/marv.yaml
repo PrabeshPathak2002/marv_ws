@@ -3,30 +3,32 @@
 
 vehicle:
   name: marv
-  # auto = resolved at launch from /dev/serial/by-id (usb-ArduPilot_ARK_FPV*-if00)
-  fcu_url: auto
+  # ArduSub FRAME_CLASS: VECTORED_6DOF (8 thrusters — mixing done in firmware).
+  frame: VECTORED_6DOF
+  thrusters: 8
+  # MAVROS via MAVProxy local UDP (start_telemetry_bridge.sh first).
+  fcu_url: udp://@127.0.0.1:14555
 
 control:
   target_depth_m: 1.0
   depth_kp: 0.25
   home_xy: [0.0, 0.0]
-  command_smooth_step: 0.035
+  command_smooth_step: 0.06
 
 # Blue Robotics exploreHD USB — front camera on Jetson (/dev/video*).
 camera_front:
   model: exploreHD
-  device: /dev/video0
+  device: /dev/explore_hd
   fourcc: MJPG
   width: 1280
   height: 720
   fps: 30
 
-# Blue Robotics Ping1D — direct USB serial via /dev/serial/by-id (FTDI).
+# Ping1D — range via FCU MAVLink (wired to ARK FPV serial port).
 ping:
-  connection: serial
-  port: auto
-  baudrate: 115200
-  driver_topic: /ping1d/range
+  connection: mavlink
+  mavros_topic: /mavros/distance_sensor/lidar
+  forward_topic: /sensors/range_forward
   obstacle_stop_m: 0.8
   approach_slow_m: 2.5
   gate_clear_m: 2.5
@@ -36,24 +38,24 @@ behaviors:
   wait_submerged:
     duration_s: 5.0
   find_gate:
-    gate_classes: [black_gate, gate]
+    gate_classes: [gate]
     conf_min: 0.20
-    search_yaw: 0.12
-    forward_surge: 0.0
+    search_yaw: 0.18
+    forward_surge: 0.15
   find_return_gate:
-    gate_classes: [black_gate, gate]
+    gate_classes: [gate]
     conf_min: 0.20
     search_yaw: 0.12
-    forward_surge: 0.32
+    forward_surge: 0.48
   traverse_gate:
-    gate_classes: [black_gate, gate]
+    gate_classes: [gate]
     conf_min: 0.20
     center_deadband: 0.20
-    commit_area: 0.12
-    commit_deadband: 0.30
-    surge_approach: 0.32
-    yaw_kp: 0.26
-    gate_max_yaw: 0.16
+    commit_area: 0.45
+    commit_deadband: 0.08
+    surge_approach: 0.55
+    yaw_kp: 0.35
+    gate_max_yaw: 0.25
     approach_slow_m: 2.5
     stop_m: 0.6
   detect_path:
@@ -64,36 +66,36 @@ behaviors:
   return_home:
     arrive_radius_m: 0.3
   pass_gate:
-    surge_speed: 0.46
+    surge_speed: 0.65
     duration_s: 7.0
     gate_clear_m: 2.5
     approach_slow_m: 2.5
     stop_m: 0.6
     use_ping_complete: true
   transit_forward:
-    surge_speed: 0.42
+    surge_speed: 0.60
     min_transit_s: 6.0
     max_transit_s: 20.0
-    marker_classes: [yellow_pole]
+    marker_classes: [obstacle, neon_orange, yellow_pole]
     conf_min: 0.25
     use_timed_transit: false  # pose-based 10 m transit when mapping_node publishes /sensors/map_pose
   find_marker:
-    marker_classes: [yellow_pole]
+    marker_classes: [obstacle, neon_orange, yellow_pole]
     conf_min: 0.25
     search_yaw: 0.12
-    forward_surge: 0.22
+    forward_surge: 0.35
   approach_marker:
-    marker_classes: [yellow_pole]
+    marker_classes: [obstacle, neon_orange, yellow_pole]
     conf_min: 0.25
     center_deadband: 0.12
     close_area: 0.055
     area_kp: 9.0
-    max_surge: 0.25
-    min_surge: 0.08
+    max_surge: 0.38
+    min_surge: 0.15
     yaw_kp: 0.55
     max_yaw: 0.28
   circle_marker:
-    marker_classes: [yellow_pole]
+    marker_classes: [obstacle, neon_orange, yellow_pole]
     conf_min: 0.25
     orbit_duration_s: 24.0
     side_step_duration_s: 5.0
@@ -101,12 +103,12 @@ behaviors:
     cross_behind_duration_s: 7.0
     u_sway_speed: -0.32
     u_cross_sway_speed: 0.36
-    u_forward_speed: 0.26
+    u_forward_speed: 0.38
     search_yaw: 0.12
     yaw_kp: 0.55
     max_yaw: 0.28
   pass_gate_clear:
-    surge_speed: 0.46
+    surge_speed: 0.65
     duration_s: 7.0
     use_ping_complete: false
   turn_around:

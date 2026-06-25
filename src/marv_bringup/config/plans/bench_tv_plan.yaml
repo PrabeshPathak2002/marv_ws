@@ -1,0 +1,25 @@
+# TV / bench gate test — skip wait and end-of-mission turn; loop gate approach.
+
+start: find_gate
+
+missions:
+  find_gate:
+    behavior: find_gate
+    timeout: 120
+    transitions:
+      success: gate_approach
+      timeout: gate_approach
+
+  gate_approach:
+    behavior: traverse_gate
+    timeout: 180
+    transitions:
+      success: gate_pass
+      timeout: gate_pass
+
+  gate_pass:
+    behavior: pass_gate
+    timeout: 45
+    transitions:
+      success: gate_approach
+      timeout: find_gate

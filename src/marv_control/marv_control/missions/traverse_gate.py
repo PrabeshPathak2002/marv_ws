@@ -11,7 +11,7 @@ class TraverseGateMission(Mission):
 
   def __init__(self, node, **config):
     super().__init__(node, **config)
-    self._gate_classes = tuple(config.get('gate_classes', ('gate', 'black_gate')))
+    self._gate_classes = tuple(config.get('gate_classes', ('gate',)))
     self._conf_min = float(config.get('conf_min', 0.35))
     self._center_deadband = float(config.get('center_deadband', 0.08))
     self._commit_area = float(config.get('commit_area', 0.12))

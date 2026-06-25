@@ -1,22 +1,35 @@
-# OpenCV HSV tuning for pre-qual (EagleAUV ros2_ws gate + marker detectors).
+# OpenCV HSV tuning for RoboSub pre-qual (pool hardware).
+#
+# Gate: RoboSub checkerboard gate — outer legs split red/black (left R/B, right B/R).
+#        Fallback: 2x2 panel or red/black leg pair.
+# Marker: Rust-Oleum Neon Orange (fluorescent orange pole).
 
 prequal_cv:
-  yellow_h_low: 18
-  yellow_h_high: 42
-  yellow_s_min: 80
-  yellow_v_min: 80
+  # Neon orange marker (Rust-Oleum Neon Orange)
+  marker_h_low: 5
+  marker_h_high: 24
+  marker_s_min: 120
+  marker_v_min: 110
+  marker_min_height_frac: 0.12
+  marker_min_aspect: 1.4
+  # Legacy aliases (same as marker_*)
+  yellow_h_low: 5
+  yellow_h_high: 24
+  yellow_s_min: 120
+  yellow_v_min: 110
   yellow_min_height_frac: 0.12
   yellow_min_aspect: 1.4
 
   gate_v_max: 100
   gate_s_max: 140
   gate_roi_top_frac: 0.10
+  # Red leg / panel (HSV)
   red_h_low1: 0
-  red_h_high1: 12
-  red_h_low2: 168
+  red_h_high1: 14
+  red_h_low2: 165
   red_h_high2: 180
-  red_s_min: 60
-  red_v_min: 40
+  red_s_min: 80
+  red_v_min: 50
 
   leg_min_height_px: 25
   leg_min_width_frac: 0.12
@@ -28,5 +41,21 @@ prequal_cv:
   pair_height_ratio_min: 0.50
   pair_vertical_delta_frac: 0.45
   pair_min_width_height_ratio: 0.60
+  checker_min_area_frac: 0.015
+  checker_min_aspect: 0.35
+  checker_max_aspect: 2.8
+  checker_quad_min_fill: 0.10
+  leg_split_min_fill: 0.18
+  leg_dilate_width_px: 11
+  blue_h_low: 85
+  blue_h_high: 125
+  blue_scene_min_frac: 0.30
+  blue_screen_min_frac: 0.18
+  blue_gate_r_delta: 22
+  blue_gate_g_max: 155
+  blue_gate_col_fill_min: 0.06
+  blue_gate_min_run_width_frac: 0.04
+  blue_gate_min_gap_frac: 0.10
+  blue_gate_vert_close_px: 15
 
   min_confidence: 0.20

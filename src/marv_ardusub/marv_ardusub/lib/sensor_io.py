@@ -14,8 +14,7 @@ GRAVITY_M_PER_S2 = 9.80665
 # MAVROS serial link to ARK FPV (ArduSub) over USB — resolved via /dev/serial/by-id at launch.
 DEFAULT_FCU_URL = 'auto'
 
-TOPIC_IMU = '/mavros/imu/data'
-TOPIC_ODOM = '/mavros/local_position/odom'
+from marv_bringup.mavros_topics import TOPIC_IMU, TOPIC_ODOM
 
 
 def setup_mavros_subscriptions(node):

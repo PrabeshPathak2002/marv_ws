@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <model name="marv_prequal_course">
+    <static>true</static>
+    <include>
+      <name>gate</name>
+      <uri>model://marv_gate</uri>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>marker</name>
+      <uri>model://marv_yellow_pole</uri>
+      <pose>10 0 0 0 0 0</pose>
+    </include>
+  </model>
+</sdf>

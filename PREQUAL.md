@@ -18,7 +18,17 @@ Guide for the optional [RoboSub pre-qualification maneuver](https://robonation.g
 
 ---
 
-## Pool course layout
+## Physical targets (Marv pool hardware)
+
+| Target | Paint / appearance | Vision class |
+|--------|-------------------|--------------|
+| Gate panel | **Split outer legs** — left red/black, right black/red (checkerboard) | `gate` |
+| Gate center | Red hanging pole (ignored for bbox) | — |
+| Marker pole | **Rust-Oleum Neon Orange** spray | `neon_orange` |
+
+HSV tuning: `src/marv_bringup/config/prequal_cv.yaml`
+
+---
 
 Build to [handbook dimensions](https://robonation.gitbook.io/robosub-resources/section-3-autonomy-challenge/3.4-competition-sequence-of-events):
 
@@ -50,7 +60,7 @@ Can't build full course? Email RoboNation for alternate instructions (per handbo
 | Pre-qual phase | Marv mission | Notes |
 |----------------|--------------|-------|
 | Submerge & hold | `wait_submerged` | Depth hold at `target_depth_m:=1.0` |
-| Align to gate | `traverse_gate` | YOLO `black_gate` (all-black gate) |
+| Align to gate | `traverse_gate` | OpenCV `gate` (checkerboard or red/black legs) |
 | Pass through gate | `pass_gate` | Ping range + forward surge |
 | Transit to marker | `transit_forward` | ~10 m dead reckoning |
 | Circle marker | `circle_marker` | YOLO `yellow_pole` |
@@ -98,6 +108,19 @@ ros2 launch marv_bringup prequal_bringup.launch.py \
   use_sim:=true enable_control:=true command_backend:=mavros_rc
 ```
 
+### Gazebo pre-qual practice (exploreHD camera in sim)
+
+```bash
+# Vision + mission planner in marv_prequal Gazebo world
+~/marv_ws/scripts/run_gazebo_prequal.sh vision
+
+# Tomorrow — real exploreHD USB at the pool
+~/marv_ws/scripts/run_gazebo_prequal.sh pool
+# or: ~/marv_ws/scripts/run_prequal_hardcoded.sh true mavros_rc
+```
+
+See README § Gazebo pre-qual practice for full SITL mode.
+
 ---
 
 ## Pre-run checklist
@@ -115,7 +138,7 @@ ros2 launch marv_bringup prequal_bringup.launch.py \
 - [ ] `numpy<2` installed (`pip3 show numpy`)
 - [ ] exploreHD USB detected (`~/marv_ws/scripts/check_explorehd.sh`)
 - [ ] Front camera sees gate at pool depth (1280×720 MJPEG on `/dev/video0`)
-- [ ] `ros2 topic echo f_cam/detections` shows `black_gate:...` / `yellow_pole:...`
+- [ ] `ros2 topic echo f_cam/detections` shows `gate:...` / `neon_orange:...` or `yellow_pole:...`
 - [ ] `/sensors/pose` updating (required for transit + turn)
 - [ ] `enable_control:=false` verified on bench before pool
 

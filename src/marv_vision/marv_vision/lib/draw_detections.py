@@ -5,6 +5,8 @@ import cv2
 _CLASS_COLORS = {
     'black_gate': (0, 255, 0),
     'gate': (0, 0, 255),
+    'obstacle': (0, 140, 255),
+    'neon_orange': (0, 140, 255),
     'yellow_pole': (0, 255, 255),
 }
 _PILLAR_COLORS = {

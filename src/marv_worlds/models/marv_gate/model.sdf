@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!-- Gate opening 2 m wide; frame at 1 m depth (center z=-1 in ENU, surface z=0). -->
+<sdf version="1.9">
+  <model name="marv_gate">
+    <static>true</static>
+    <link name="link">
+      <pose>0 0 -1 0 0 0</pose>
+      <!-- Left post -->
+      <visual name="post_l">
+        <pose>0 -1.15 -0.5 0 0 0</pose>
+        <geometry><box><size>0.12 0.12 1.0</size></box></geometry>
+        <material><ambient>0.02 0.02 0.02 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material>
+      </visual>
+      <collision name="post_l"><pose>0 -1.15 -0.5 0 0 0</pose><geometry><box><size>0.12 0.12 1.0</size></box></geometry></collision>
+      <!-- Right post -->
+      <visual name="post_r">
+        <pose>0 1.15 -0.5 0 0 0</pose>
+        <geometry><box><size>0.12 0.12 1.0</size></box></geometry>
+        <material><ambient>0.02 0.02 0.02 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material>
+      </visual>
+      <collision name="post_r"><pose>0 1.15 -0.5 0 0 0</pose><geometry><box><size>0.12 0.12 1.0</size></box></geometry></collision>
+      <!-- Top bar -->
+      <visual name="top_bar">
+        <pose>0 0 0.0 0 0 0</pose>
+        <geometry><box><size>0.12 2.42 0.12</size></box></geometry>
+        <material><ambient>0.02 0.02 0.02 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material>
+      </visual>
+      <collision name="top_bar"><pose>0 0 0.0 0 0 0</pose><geometry><box><size>0.12 2.42 0.12</size></box></geometry></collision>
+      <!-- All-black panel for OpenCV black_gate detection -->
+      <visual name="panel">
+        <pose>0 0 -0.35 0 0 0</pose>
+        <geometry><box><size>0.04 1.8 0.7</size></box></geometry>
+        <material><ambient>0 0 0 1</ambient><diffuse>0 0 0 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+</sdf>

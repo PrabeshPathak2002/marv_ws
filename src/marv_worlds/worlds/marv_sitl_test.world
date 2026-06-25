@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!-- Minimal world for ArduSub SITL bring-up (no bb_worlds meshes). -->
+<sdf version="1.9">
+  <world name="marv_sitl_test">
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+    <plugin filename="gz-sim-buoyancy-system" name="gz::sim::systems::Buoyancy">
+      <graded_buoyancy>
+        <default_density>1000</default_density>
+        <density_change>
+          <above_depth>0</above_depth>
+          <density>1</density>
+        </density_change>
+      </graded_buoyancy>
+    </plugin>
+    <light type="directional" name="sun">
+      <pose>0 0 10 0 0 0</pose>
+    </light>
+    <include>
+      <name>marv_auv</name>
+      <uri>model://marv_auv</uri>
+      <pose>0 0 -2 0 0 0</pose>
+    </include>
+  </world>
+</sdf>

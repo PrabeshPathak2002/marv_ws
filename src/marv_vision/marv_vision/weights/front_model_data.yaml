@@ -1,13 +1,6 @@
-train: ../train/images
-val: ../valid/images
-test: ../test/images
+path: pool_gate_dataset
+train: train/images
+val: val/images
 
-nc: 14
-names: ['Chain', 'Circle', 'Ladder', 'Reflections', 'Rope', 'Square', 'circle', 'cross', 'gate', 'ladder', 'obstacle', 'path', 'reflections', 'square']
-
-roboflow:
-  workspace: jonathans-workspace-wrt9y
-  project: jonathans-workspace-wrt9y
-  version: dataset
-  license: Private
-  url: https://app.roboflow.com/jonathans-workspace-wrt9y/jonathans-workspace-wrt9y/dataset
+nc: 2
+names: ['gate', 'obstacle']

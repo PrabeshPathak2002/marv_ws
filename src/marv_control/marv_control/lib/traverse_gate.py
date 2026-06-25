@@ -3,7 +3,7 @@
 from marv_control.lib.ping_helpers import scale_surge_by_range
 from marv_control.lib.vision_parse import best_detection, parse_vision_string
 
-DEFAULT_GATE_CLASSES = ('gate', 'black_gate')
+DEFAULT_GATE_CLASSES = ('gate',)
 CONF_MIN = 0.35
 CENTER_DEADBAND = 0.08
 SURGE_APPROACH = 0.32
@@ -26,7 +26,7 @@ def traverse_gate(node, vision_data=None, forward_range_m=None,
   detections = parse_vision_string(vision_data)
   gate = best_detection(detections, gate_classes)
   if gate is None or gate.get('confidence', 0.0) < conf_min:
-    return None
+    return {'surge': 0.12, 'sway': 0.0, 'heave': 0.0, 'yaw': 0.15}
 
   x = gate.get('x', 0.5)
   x_err = x - 0.5 - float(target_x_offset)

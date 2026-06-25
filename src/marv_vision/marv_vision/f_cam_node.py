@@ -15,6 +15,7 @@ from marv_vision.lib import (
     process_f_cam,
     process_vslam,
 )
+from marv_vision.lib.f_cam_data import process_f_cam_hybrid
 from marv_vision.lib.camera_input import CameraInput
 from marv_vision.lib.draw_detections import draw_detections
 from marv_vision.lib.prequal_cv import process_prequal_cv
@@ -49,7 +50,7 @@ class FCamNode(Node):
     self.declare_parameter('use_sim', False)
     self.declare_parameter('sim_image_topic', SIM_IMAGE_TOPIC)
     self.declare_parameter('camera_index', 0)
-    self.declare_parameter('camera_device', '/dev/video0')
+    self.declare_parameter('camera_device', '/dev/explore_hd')
     self.declare_parameter('frame_fps', 30.0)
     self.declare_parameter('fourcc', 'MJPG')
     self.declare_parameter('conf_threshold', 0.25)
@@ -68,6 +69,17 @@ class FCamNode(Node):
       cfg_path = self.get_parameter('prequal_cv_config').value
       self.get_logger().info(
           f'Front camera: OpenCV pre-qual mode (config={cfg_path or "defaults"})')
+    elif profile == 'prequal_hybrid':
+      cfg_path = self.get_parameter('prequal_cv_config').value
+      override = self.get_parameter('model_path').value or None
+      try:
+        from marv_vision.lib.model_config import resolve_model_path
+        yolo_path = resolve_model_path('default', override_path=override or None)
+        self.get_logger().info(
+            f'Front camera: hybrid OpenCV + YOLO '
+            f'(cv={cfg_path or "defaults"}, yolo={yolo_path})')
+      except FileNotFoundError as exc:
+        self.get_logger().error(str(exc))
     elif profile != 'prequal':
       override = self.get_parameter('model_path').value or None
       try:
@@ -130,6 +142,14 @@ class FCamNode(Node):
           frame,
           config_path=self.get_parameter('prequal_cv_config').value or None,
           min_confidence=conf,
+      )
+    if profile == 'prequal_hybrid':
+      return process_f_cam_hybrid(
+          frame,
+          model_path=self.get_parameter('model_path').value or None,
+          conf=conf,
+          yolo_profile='default',
+          prequal_cv_config=self.get_parameter('prequal_cv_config').value or None,
       )
     return process_f_cam(
         frame,

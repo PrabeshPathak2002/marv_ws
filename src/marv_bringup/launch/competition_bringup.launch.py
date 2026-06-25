@@ -30,7 +30,8 @@ def generate_launch_description():
         DeclareLaunchArgument('use_mavros', default_value='true'),
         DeclareLaunchArgument(
             'fcu_url',
-            default_value='serial:///dev/ttyACM0:115200',
+            default_value='udp://@127.0.0.1:14555',
+            description='MAVROS UDP from MAVProxy.',
         ),
         DeclareLaunchArgument('use_ardusub', default_value='true'),
         DeclareLaunchArgument('use_vision', default_value='true'),

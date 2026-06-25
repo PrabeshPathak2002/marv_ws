@@ -31,8 +31,11 @@ setup(
             'pytest',
         ],
     },
-    entry_points={
+        entry_points={
         'console_scripts': [
+            'fcu_setup_node = marv_bringup.fcu_setup_node:main',
+            'mavlink_ping_bridge = marv_bringup.mavlink_ping_bridge:main',
+            'bench_range_sim = marv_bringup.bench_range_sim:main',
         ],
     },
 )

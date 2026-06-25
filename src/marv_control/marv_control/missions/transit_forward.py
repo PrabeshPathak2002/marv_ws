@@ -17,7 +17,7 @@ class TransitForwardMission(Mission):
     self._min_transit_s = float(config.get('min_transit_s', 6.0))
     self._max_transit_s = float(config.get('max_transit_s', 20.0))
     self._marker_classes = tuple(
-        config.get('marker_classes', ('yellow_pole', 'circle', 'Circle', 'cross')))
+        config.get('marker_classes', ('obstacle', 'yellow_pole', 'circle', 'Circle', 'cross')))
     self._conf_min = float(config.get('conf_min', 0.25))
     self._use_timed_transit = bool(config.get('use_timed_transit', True))
     self._start_pose = None

@@ -12,7 +12,10 @@ PING_GLOB_PATTERNS = (
 )
 
 
-def resolve_ping_device(fallback='/dev/ttyUSB0'):
+def resolve_ping_device(fallback='/dev/ping_sonar'):
+    udev = Path('/dev/ping_sonar')
+    if udev.exists():
+        return str(udev)
     if not BY_ID_DIR.is_dir():
         return fallback
     for pattern in PING_GLOB_PATTERNS:

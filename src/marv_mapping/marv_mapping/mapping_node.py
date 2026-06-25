@@ -25,9 +25,9 @@ TOPIC_LANDMARKS = '/mapping/landmarks'
 TOPIC_FCU_POSE = '/sensors/pose'
 TOPIC_PING = '/ping1d/range'
 TOPIC_VISION = '/f_cam/detections'
-TOPIC_IMU = '/mavros/imu/data'
+from marv_bringup.mavros_topics import TOPIC_IMU
 
-PREQUAL_CLASSES = ('black_gate', 'gate', 'yellow_pole', 'circle', 'Circle', 'cross')
+PREQUAL_CLASSES = ('gate', 'obstacle', 'yellow_pole', 'circle', 'Circle', 'cross')
 
 
 def _yaw_deg_from_quaternion(qx, qy, qz, qw):

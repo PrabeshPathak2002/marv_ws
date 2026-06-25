@@ -138,11 +138,11 @@ class MasterControlNode(Node):
     self.mission_event_pub.publish(msg)
 
   def control_loop(self):
-    if not self.get_parameter('enable_control').value:
-      return
+    control_enabled = self.get_parameter('enable_control').value
 
     if self._mission is None or self._mission_done:
-      self.cmd_vel_pub.publish(self._compute_cmd_vel(None))
+      if control_enabled:
+        self.cmd_vel_pub.publish(self._compute_cmd_vel(None))
       return
 
     now = self.get_clock().now()
@@ -158,10 +158,21 @@ class MasterControlNode(Node):
 
     result = self._mission.step(self._mission_ctx)
     behavior_cmd = result.cmd
-    if behavior_cmd:
+    if behavior_cmd and control_enabled:
       behavior_cmd = smooth_command(
           self._last_cmd, behavior_cmd, max_step=self._cmd_smooth_step)
       self._last_cmd = dict(behavior_cmd)
+
+    if result.complete:
+      self._mission.cleanup()
+      self._publish_mission_event(result.success, result.message)
+      self._mission_done = True
+      if not self.get_parameter('planner_mode').value:
+        self._activate_behavior('hold')
+      return
+
+    if not control_enabled:
+      return
 
     open_grip(self)
     close_grip(self)
@@ -184,15 +195,8 @@ class MasterControlNode(Node):
 
     self.cmd_vel_pub.publish(cmd)
 
-    if result.complete:
-      self._mission.cleanup()
-      self._publish_mission_event(result.success, result.message)
-      self._mission_done = True
-      if not self.get_parameter('planner_mode').value:
-        self._activate_behavior('hold')
-
     self._log_counter += 1
-    if self._log_counter % 50 == 0 and self.get_parameter('enable_control').value:
+    if self._log_counter % 50 == 0:
       self.get_logger().info(
           f'behavior={self._mission_key} cmd surge={cmd.linear.x:.2f} '
           f'sway={cmd.linear.y:.2f} heave={cmd.linear.z:.2f}')

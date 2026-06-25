@@ -9,7 +9,11 @@ from launch_ros.actions import Node
 def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('pose_topic', default_value='/sensors/pose'),
-        DeclareLaunchArgument('ping_topic', default_value='/ping1d/range'),
+        DeclareLaunchArgument(
+            'ping_topic',
+            default_value='/sensors/range_forward',
+            description='Forward range from ardusub_node (FCU Ping or USB driver).',
+        ),
         DeclareLaunchArgument('vision_topic', default_value='/f_cam/detections'),
         DeclareLaunchArgument('imu_topic', default_value='/mavros/imu/data'),
         DeclareLaunchArgument('image_width', default_value='1280'),

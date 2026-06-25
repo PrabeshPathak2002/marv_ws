@@ -12,6 +12,7 @@ def generate_launch_description():
     hold_depth_with_autopilot = LaunchConfiguration('hold_depth_with_autopilot')
     publish_pose = LaunchConfiguration('publish_pose')
     ping_range_topic = LaunchConfiguration('ping_range_topic')
+    rc_scale_pwm = LaunchConfiguration('rc_scale_pwm')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -39,8 +40,13 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'ping_range_topic',
-            default_value='/ping1d/range',
-            description='sensor_msgs/Range topic from Ping driver or MAVROS.',
+            default_value='/mavros/distance_sensor/lidar',
+            description='Ping range: MAVROS FCU path (default) or /ping1d/range for USB driver.',
+        ),
+        DeclareLaunchArgument(
+            'rc_scale_pwm',
+            default_value='550',
+            description='RC override PWM span per unit cmd_vel [-1,1] (default 550 ≈ ±550 µs).',
         ),
         Node(
             package='marv_ardusub',
@@ -53,6 +59,7 @@ def generate_launch_description():
                 'hold_depth_with_autopilot': hold_depth_with_autopilot,
                 'publish_pose': publish_pose,
                 'ping_range_topic': ping_range_topic,
+                'rc_scale_pwm': rc_scale_pwm,
             }],
         ),
     ])

@@ -39,8 +39,8 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'fcu_url',
-            default_value='serial:///dev/ttyACM0:115200',
-            description='MAVROS serial URL for ARK FPV on Jetson USB.',
+            default_value='udp://@127.0.0.1:14555',
+            description='MAVROS UDP from MAVProxy (start_telemetry_bridge.sh first).',
         ),
         DeclareLaunchArgument(
             'use_ardusub',

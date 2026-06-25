@@ -15,7 +15,7 @@ class CircleMarkerMission(Mission):
   def __init__(self, node, **config):
     super().__init__(node, **config)
     self._marker_classes = tuple(
-        config.get('marker_classes', ('yellow_pole', 'circle', 'Circle', 'cross')))
+        config.get('marker_classes', ('obstacle', 'yellow_pole', 'circle', 'Circle', 'cross')))
     self._conf_min = float(config.get('conf_min', 0.30))
     self._orbit_duration_s = float(config.get('orbit_duration_s', 24.0))
     self._side_step_duration_s = float(config.get('side_step_duration_s', 5.0))

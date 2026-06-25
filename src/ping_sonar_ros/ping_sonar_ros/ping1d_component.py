@@ -58,7 +58,7 @@ class Ping1dComponent(Node):
     self.declare_parameter('mode_auto', 0) # default 0: manual mode, 1: auto mode
     self.mode_auto_:int = self.get_parameter('mode_auto').value
     self.declare_parameter('connection', 'serial')  # serial | udp (udp only if a proxy holds the port)
-    self.declare_parameter('port', 'auto')
+    self.declare_parameter('port', '/dev/ping_sonar')
     self.declare_parameter('udp_host', '127.0.0.1')
     self.declare_parameter('udp_port', 9090)
 

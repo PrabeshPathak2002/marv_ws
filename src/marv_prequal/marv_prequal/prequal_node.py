@@ -47,7 +47,7 @@ def _yaw_from_quaternion(qx, qy, qz, qw):
 
 
 class PrequalNode(Node):
-    """8-thruster AUV pre-qual state machine (BlueROV2 Heavy layout)."""
+    """Pre-qual state machine for Marv (VECTORED_6DOF, 8 thrusters via ArduSub)."""
 
     def __init__(self):
         super().__init__('prequal_node')

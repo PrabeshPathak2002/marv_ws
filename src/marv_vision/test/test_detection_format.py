@@ -5,7 +5,7 @@ from marv_vision.lib.detection_format import format_detection_string, parse_dete
 
 def test_format_and_parse_includes_area():
   detections = [{
-      'class_name': 'black_gate',
+      'class_name': 'gate',
       'confidence': 0.85,
       'x': 0.42,
       'y': 0.55,

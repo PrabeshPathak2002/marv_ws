@@ -13,7 +13,7 @@ class FindMarkerMission(Mission):
   def __init__(self, node, **config):
     super().__init__(node, **config)
     self._marker_classes = tuple(
-        config.get('marker_classes', ('yellow_pole', 'circle', 'Circle', 'cross')))
+        config.get('marker_classes', ('obstacle', 'yellow_pole', 'circle', 'Circle', 'cross')))
     self._conf_min = float(config.get('conf_min', 0.25))
     self._search_yaw = float(config.get('search_yaw', 0.12))
     self._forward_surge = float(config.get('forward_surge', 0.22))

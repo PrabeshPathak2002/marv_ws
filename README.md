@@ -168,6 +168,54 @@ ros2 launch marv_bringup prequal_bringup.launch.py enable_control:=true command_
 
 See **[PREQUAL.md](PREQUAL.md)** for course layout, checklist, and tuning.
 
+### Gazebo worlds (per mission + pre-qual)
+
+Package **`marv_worlds`** + submodule **`bb_worlds`** ([BumblebeeAS/bb_worlds](https://github.com/BumblebeeAS/bb_worlds)) provide Gazebo Sim worlds using the real RoboSub pool/gate/marker meshes.
+
+```bash
+# One-shot install (bb_worlds + marv_worlds + git lfs meshes)
+~/marv_ws/scripts/install_sim_worlds.sh
+
+source ~/marv_ws/install/bb_worlds/share/bb_worlds/local_setup.bash
+source ~/marv_ws/install/marv_worlds/share/marv_worlds/local_setup.bash
+
+# Full pre-qual (bb_worlds robosub25 prequali_task + sp_swimming_pool)
+ros2 launch marv_worlds gazebo_world.launch.py mission:=prequal
+
+# Single mission practice
+ros2 launch marv_worlds gazebo_world.launch.py mission:=traverse_gate
+ros2 launch marv_worlds gazebo_world.launch.py mission:=circle_marker
+
+# Full 2026 competition pool layout
+ros2 launch marv_worlds gazebo_world.launch.py mission:=competition
+
+# Procedural fallback if git-lfs meshes missing
+ros2 launch marv_worlds gazebo_world.launch.py mission:=prequal use_simple:=true
+```
+
+Requires `git-lfs` for meshes: `sudo apt install git-lfs && ~/marv_ws/scripts/setup_bb_worlds_assets.sh`
+
+Regenerate after layout edits: `python3 src/marv_worlds/scripts/generate_worlds.py`
+
+### Gazebo pre-qual practice (exploreHD camera in sim)
+
+Tonight / bench — Gazebo camera feeds `prequal_cv` vision + mission planner:
+
+```bash
+~/marv_ws/scripts/run_gazebo_prequal.sh vision
+# Watch: ros2 topic echo /f_cam/detections
+#         rqt_image_view /f_cam/image_annotated
+```
+
+Full sim with ArduSub SITL + MAVROS (optional):
+
+```bash
+# Terminal 1
+~/marv_ws/scripts/start_ardusub_sitl.sh
+# Terminal 2
+~/marv_ws/scripts/run_gazebo_prequal.sh full
+```
+
 ### Mission planner
 
 Inspired by [Inspiration Robotics robosub_2026](https://github.com/InspirationRobotics/robosub_2026): mission classes with `step`/`cleanup`, YAML mission graphs, and per-vehicle config.
